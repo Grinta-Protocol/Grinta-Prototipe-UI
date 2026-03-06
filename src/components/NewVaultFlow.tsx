@@ -1,76 +1,128 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Wallet, ArrowRight, Download, PlusCircle, CheckCircle2, TrendingUp, Zap, Activity, ChevronRight, Loader2, Link as LinkIcon, Bitcoin, Terminal, Clock, ShieldCheck } from 'lucide-react';
-import { useVaults, Step } from '../context/VaultContext';
+import { Wallet, ArrowRight, Download, CheckCircle2, TrendingUp, Zap, Activity, Loader2, Bitcoin, Clock, ShieldCheck } from 'lucide-react';
+import { useAccount, useConnect, useSendTransaction } from '@starknet-react/core';
+import { useVaults } from '../context/VaultContext';
+import { config } from '../config/contracts';
+import { getSafeEngine, parseBtcAmount, formatBtcAmount } from '../lib/starknet';
+import { useWbtcBalance } from '../hooks/useGrinta';
 
 export default function NewVaultFlow() {
-    const { step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, addVault, setActiveVaultId, activeVaultId, updateVault } = useVaults();
+    const { step, setStep, vaults, addVault, setActiveVaultId, activeVaultId } = useVaults();
     const [isProcessing, setIsProcessing] = useState(false);
-    const [depositAmount, setDepositAmount] = useState('1.5');
+    const [depositAmount, setDepositAmount] = useState('');
     const [selectedStrategy, setSelectedStrategy] = useState('Yield Grinta');
+    const [txStatus, setTxStatus] = useState<string | null>(null);
+    const [connectingWallet, setConnectingWallet] = useState(false);
 
-    const steps = [
-        { id: 'connect', label: 'Conexión' },
-        { id: 'deposit', label: 'Depósito' },
+    const { address, isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
+    const { sendAsync, isPending } = useSendTransaction({});
+    const { balance: wbtcBalance, isLoading: balanceLoading, refetch: refetchBalance } = useWbtcBalance();
+
+    const flowSteps = [
+        { id: 'connect', label: 'Conexion' },
+        { id: 'deposit', label: 'Deposito' },
         { id: 'create_vault', label: 'Estrategia' },
         { id: 'vault_view', label: 'Vault Live' }
     ];
 
-    const currentStepIdx = steps.findIndex(s => s.id === step);
+    const currentStepIdx = flowSteps.findIndex(s => s.id === step);
 
-    // Paso 1: Conectar Billetera
-    const handleConnect = () => {
-        setIsProcessing(true);
-        setTimeout(() => {
-            setIsProcessing(false);
-            setStep('deposit');
-        }, 1000);
-    };
-
-    // Paso 2: Depósito
-    const handleDeposit = () => {
-        setIsProcessing(true);
-        setTimeout(() => {
-            setIsProcessing(false);
-            const amount = parseFloat(depositAmount);
-            setBalanceL1(prev => prev - amount);
-            setBalanceL2(balanceL2 + amount);
-            setStep('create_vault');
-        }, 1500);
-    };
-
-    // Paso 3: Crear Vault
-    const handleCreateVault = () => {
-        setIsProcessing(true);
-        setTimeout(() => {
-            setIsProcessing(false);
-            const newVaultId = `v-${Math.random().toString(36).substr(2, 9)}`;
-            const newVault = {
-                id: newVaultId,
-                amount: parseFloat(depositAmount),
-                strategy: 'Yield Grinta (Agentic)',
-                apy: 12.5,
-                yieldEarned: 0,
-                flashMints: 0,
-                agentActions: 0,
-                logs: [
-                    { id: '1', message: 'Vault Creado: Depósito de ' + depositAmount + ' BTC confirmado en L2.', timestamp: new Date(), type: 'info' as const }
-                ],
-                createdAt: new Date()
-            };
-            addVault(newVault);
-            setBalanceL2(0);
-            setActiveVaultId(newVaultId);
-            setStep('vault_view');
-        }, 2000);
-    };
-
-    // No interval needed here as VaultContext handles global simulation
+    // Advance from connect step only after user explicitly clicked a connector
     useEffect(() => {
-        // Just ensuring we have an active vault if needed
-    }, [step, activeVaultId]);
+        if (step === 'connect' && connectingWallet && isConnected && address) {
+            setConnectingWallet(false);
+            setStep('deposit');
+        }
+    }, [step, connectingWallet, isConnected, address]);
+
+    // Refetch WBTC balance when arriving at deposit step
+    useEffect(() => {
+        if (step === 'deposit' && isConnected) {
+            refetchBalance();
+        }
+    }, [step, isConnected]);
+
+    const handleConnectorClick = (connector: any) => {
+        setConnectingWallet(true);
+        connect({ connector });
+    };
+
+    // Deposit step: open_safe + approve + deposit in one multicall tx
+    const [createdSafeId, setCreatedSafeId] = useState<number | null>(null);
+
+    const handleDeposit = async () => {
+        if (!address || isPending) return;
+        const parsedAmount = parseBtcAmount(depositAmount || '0');
+        if (parsedAmount <= 0n || parsedAmount > wbtcBalance) return;
+
+        setIsProcessing(true);
+        setTxStatus(null);
+        try {
+            const engine = getSafeEngine();
+            const countBefore = Number(await engine.get_safe_count());
+            const newSafeId = countBefore + 1;
+
+            // Multicall: open_safe + approve WBTC + deposit collateral
+            await sendAsync([
+                {
+                    contractAddress: config.safeManagerAddress,
+                    entrypoint: 'open_safe',
+                    calldata: [],
+                },
+                {
+                    contractAddress: config.wbtcAddress,
+                    entrypoint: 'approve',
+                    calldata: [config.collateralJoinAddress, `0x${parsedAmount.toString(16)}`, '0x0'],
+                },
+                {
+                    contractAddress: config.safeManagerAddress,
+                    entrypoint: 'deposit',
+                    calldata: [newSafeId.toString(), `0x${parsedAmount.toString(16)}`, '0x0'],
+                },
+            ]);
+
+            setCreatedSafeId(newSafeId);
+            setStep('create_vault');
+        } catch (err) {
+            console.error('deposit failed:', err);
+            setTxStatus(`Error: ${(err as Error).message}`);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Strategy step: just registers the vault in app state (tx already done)
+    const handleCreateVault = () => {
+        const safeId = createdSafeId;
+        if (!safeId) return;
+
+        const depositDisplay = depositAmount || '0';
+        const newVaultId = `safe-${safeId}`;
+        const newVault = {
+            id: newVaultId,
+            safeId: safeId,
+            amount: parseFloat(depositDisplay) || 0,
+            strategy: 'Yield Grinta (Agentic)',
+            apy: 12.5,
+            yieldEarned: 0,
+            flashMints: 0,
+            agentActions: 0,
+            logs: [
+                { id: '1', message: `SAFE #${safeId} creado on-chain. Deposito de ${depositDisplay} WBTC confirmado.`, timestamp: new Date(), type: 'info' as const }
+            ],
+            createdAt: new Date()
+        };
+        addVault(newVault);
+        setActiveVaultId(newVaultId);
+        setStep('vault_view');
+    };
 
     const activeVault = vaults.find(v => v.id === activeVaultId);
+    const wbtcBalanceDisplay = formatBtcAmount(wbtcBalance);
+    const parsedDeposit = parseBtcAmount(depositAmount || '0');
+    const depositValid = parsedDeposit > 0n && parsedDeposit <= wbtcBalance;
 
     return (
         <div className="w-full max-w-6xl mx-auto py-8 px-6">
@@ -78,8 +130,8 @@ export default function NewVaultFlow() {
             {step !== 'main_dashboard' && step !== 'vault_view' && (
                 <div className="flex items-center justify-center mb-12">
                     <div className="flex items-center gap-4">
-                        {steps.slice(0, 3).map((s, idx) => {
-                            const isPast = steps.findIndex(step => step.id === s.id) < currentStepIdx;
+                        {flowSteps.slice(0, 3).map((s, idx) => {
+                            const isPast = flowSteps.findIndex(fs => fs.id === s.id) < currentStepIdx;
                             const isCurrent = s.id === step;
                             return (
                                 <React.Fragment key={s.id}>
@@ -102,6 +154,7 @@ export default function NewVaultFlow() {
             )}
 
             <AnimatePresence mode="wait">
+                {/* ── STEP 1: CONNECT WALLET ── */}
                 {step === 'connect' && (
                     <motion.div
                         key="connect"
@@ -115,19 +168,56 @@ export default function NewVaultFlow() {
                         </div>
                         <div className="space-y-4">
                             <h1 className="text-4xl font-extrabold font-syncopate uppercase tracking-tighter">Bienvenido a Grinta</h1>
-                            <p className="text-grinta-text-secondary text-lg max-w-md">Conecta tu billetera para comenzar el viaje hacia el rendimiento agéntico en Bitcoin.</p>
+                            <p className="text-grinta-text-secondary text-lg max-w-md">Conecta tu billetera Starknet para comenzar el viaje hacia el rendimiento agéntico en Bitcoin.</p>
                         </div>
-                        <button
-                            onClick={handleConnect}
-                            disabled={isProcessing}
-                            className="px-12 py-4 bg-grinta-accent text-black font-bold rounded-2xl flex items-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.3)] disabled:opacity-50"
-                        >
-                            {isProcessing ? <Loader2 className="animate-spin" /> : <PlusCircle size={20} />}
-                            {isProcessing ? 'Conectando...' : 'CONECTAR METAMASK'}
-                        </button>
+
+                        {isConnected && address ? (
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-grinta-accent/10 border border-grinta-accent/30">
+                                    <CheckCircle2 size={16} className="text-grinta-accent" />
+                                    <span className="text-sm text-grinta-accent font-semibold">
+                                        Conectado: {address.slice(0, 6)}...{address.slice(-4)}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => setStep('deposit')}
+                                    className="px-12 py-4 bg-grinta-accent text-black font-bold rounded-2xl flex items-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.3)]"
+                                >
+                                    <ArrowRight size={20} />
+                                    CONTINUAR
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-3 w-full max-w-sm">
+                                {connectingWallet && (
+                                    <div className="flex items-center justify-center gap-2 py-3 text-grinta-accent text-sm">
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Esperando aprobacion de la billetera...
+                                    </div>
+                                )}
+                                {connectors.map((connector) => {
+                                    let displayName = connector.name || connector.id;
+                                    if (displayName.toLowerCase().includes('argent')) {
+                                        displayName = 'Ready Wallet';
+                                    }
+                                    return (
+                                        <button
+                                            key={connector.id}
+                                            onClick={() => handleConnectorClick(connector)}
+                                            disabled={connectingWallet}
+                                            className="px-12 py-4 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.3)] disabled:opacity-50"
+                                        >
+                                            <Wallet size={20} />
+                                            {displayName}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </motion.div>
                 )}
 
+                {/* ── STEP 2: DEPOSIT (real WBTC balance) ── */}
                 {step === 'deposit' && (
                     <motion.div
                         key="deposit"
@@ -143,54 +233,84 @@ export default function NewVaultFlow() {
                                     <Bitcoin size={24} />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold font-syncopate uppercase tracking-widest text-white">Fondear Grinta</h2>
-                                    <p className="text-xs text-grinta-text-secondary">Depósito L1 Mainnet → L2 Rollup</p>
+                                    <h2 className="text-2xl font-bold font-syncopate uppercase tracking-widest text-white">Depositar WBTC</h2>
+                                    <p className="text-xs text-grinta-text-secondary">Colateral para tu SAFE en Grinta Protocol</p>
                                 </div>
                             </div>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="text-[10px] font-bold text-grinta-text-secondary uppercase mb-2 block">Balance L1 Disponible</label>
-                                    <div className="text-2xl font-bold text-white">{balanceL1.toFixed(2)} BTC</div>
+                                    <label className="text-[10px] font-bold text-grinta-text-secondary uppercase mb-2 block">Balance WBTC Disponible</label>
+                                    <div className="text-2xl font-bold text-white">
+                                        {balanceLoading ? (
+                                            <span className="flex items-center gap-2 text-grinta-text-secondary">
+                                                <Loader2 size={18} className="animate-spin" /> Cargando...
+                                            </span>
+                                        ) : (
+                                            <>{wbtcBalanceDisplay} <span className="text-orange-500">WBTC</span></>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
                                     <label className="text-[10px] font-bold text-grinta-text-secondary uppercase block">Monto a Depositar</label>
                                     <div className="flex items-center gap-4">
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="decimal"
                                             value={depositAmount}
-                                            onChange={(e) => setDepositAmount(e.target.value)}
-                                            className="bg-transparent text-4xl font-bold text-white border-none outline-none w-full"
+                                            onChange={(e) => {
+                                                if (/^\d*\.?\d*$/.test(e.target.value)) setDepositAmount(e.target.value);
+                                            }}
+                                            className="bg-transparent text-4xl font-bold text-white border-none outline-none w-full placeholder:text-white/20"
+                                            placeholder="0.0"
                                         />
-                                        <span className="text-xl font-bold text-orange-500">BTC</span>
+                                        <span className="text-xl font-bold text-orange-500">WBTC</span>
                                     </div>
+                                    {!balanceLoading && wbtcBalance > 0n && (
+                                        <button
+                                            onClick={() => setDepositAmount(formatBtcAmount(wbtcBalance))}
+                                            className="text-[10px] font-bold text-grinta-accent uppercase hover:underline"
+                                        >
+                                            MAX
+                                        </button>
+                                    )}
                                 </div>
+
+                                {depositAmount && !depositValid && parsedDeposit > 0n && (
+                                    <div className="text-xs text-red-400">Monto excede el balance disponible</div>
+                                )}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Red Destino</span>
-                                        <span className="text-xs font-bold text-grinta-accent">Grinta L2</span>
+                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Red</span>
+                                        <span className="text-xs font-bold text-grinta-accent">Starknet Sepolia</span>
                                     </div>
                                     <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Costo Estimado</span>
-                                        <span className="text-xs font-bold text-white">$1.24 USD</span>
+                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Wallet</span>
+                                        <span className="text-xs font-bold text-white">{address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '-'}</span>
                                     </div>
                                 </div>
 
                                 <button
                                     onClick={handleDeposit}
-                                    disabled={isProcessing}
-                                    className="w-full py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)] disabled:opacity-50"
+                                    disabled={!depositValid || isProcessing || isPending}
+                                    className="w-full py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {isProcessing ? <Loader2 className="animate-spin" /> : <Download size={20} />}
-                                    {isProcessing ? 'PROCESANDO DEPÓSITO...' : 'CONFIRMAR DEPÓSITO'}
+                                    {isProcessing || isPending ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                                    {isProcessing || isPending ? 'FIRMANDO TRANSACCION...' : 'CREAR SAFE Y DEPOSITAR'}
                                 </button>
+                                {txStatus && (
+                                    <div className="mt-4 p-4 bg-black/40 border border-white/10 rounded-xl">
+                                        <p className="text-xs text-red-400">{txStatus}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </motion.div>
                 )}
 
+                {/* ── STEP 3: STRATEGY + CREATE VAULT (open_safe + approve + deposit multicall) ── */}
                 {step === 'create_vault' && (
                     <motion.div
                         key="create_vault"
@@ -202,11 +322,11 @@ export default function NewVaultFlow() {
                         <div className="flex justify-between items-end mb-4 px-4">
                             <div>
                                 <h2 className="text-3xl font-bold font-syncopate uppercase tracking-tighter text-white">Nuevo Vault</h2>
-                                <p className="text-grinta-text-secondary">Selección de Estrategia Agéntica</p>
+                                <p className="text-grinta-text-secondary">Seleccion de Estrategia Agentica</p>
                             </div>
                             <div className="text-right">
-                                <div className="text-[10px] text-grinta-text-secondary uppercase font-bold mb-1">Balance L2</div>
-                                <div className="text-2xl font-bold text-grinta-accent">{balanceL2} BTC</div>
+                                <div className="text-[10px] text-grinta-text-secondary uppercase font-bold mb-1">Deposito</div>
+                                <div className="text-2xl font-bold text-grinta-accent">{depositAmount || '0'} WBTC</div>
                             </div>
                         </div>
 
@@ -227,7 +347,7 @@ export default function NewVaultFlow() {
                                     </div>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2 font-syncopate tracking-tight">Yield Grinta</h3>
-                                <p className="text-xs text-grinta-text-secondary leading-relaxed mb-4">Agents automatizados ejecutan Flash-Mints d arbitrage en múltiples L2s.</p>
+                                <p className="text-xs text-grinta-text-secondary leading-relaxed mb-4">Agents automatizados ejecutan Flash-Mints d arbitrage en multiples L2s.</p>
                                 <div className="flex items-center gap-2">
                                     <div className="px-3 py-1 rounded-full bg-grinta-accent/20 text-grinta-accent text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5">
                                         <div className="w-1.5 h-1.5 rounded-full bg-grinta-accent animate-pulse"></div>
@@ -250,13 +370,13 @@ export default function NewVaultFlow() {
                                     </div>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2 font-syncopate tracking-tight">Staking Pasivo</h3>
-                                <p className="text-xs text-grinta-text-secondary leading-relaxed">Colocación en pools balanceadas con riesgo mínimo. (Próximamente)</p>
+                                <p className="text-xs text-grinta-text-secondary leading-relaxed">Colocacion en pools balanceadas con riesgo minimo. (Proximamente)</p>
                             </div>
                         </div>
 
                         <div className="bg-grinta-card border border-white/5 p-6 rounded-2xl flex flex-col items-center">
                             <div className="w-full flex justify-between mb-4 px-2">
-                                <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">Asignación Total</span>
+                                <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">Asignacion Total</span>
                                 <span className="text-xs font-bold text-white">100% Capital</span>
                             </div>
                             <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5 mb-8">
@@ -269,16 +389,17 @@ export default function NewVaultFlow() {
                             </div>
                             <button
                                 onClick={handleCreateVault}
-                                disabled={isProcessing}
-                                className="w-full max-w-sm py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)]"
+                                disabled={!createdSafeId}
+                                className="w-full max-w-sm py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)] disabled:opacity-50"
                             >
-                                {isProcessing ? <Loader2 className="animate-spin" /> : <Activity size={20} />}
-                                {isProcessing ? 'DESPLEGANDO VAULT...' : 'CREAR VAULT Y GENERAR YIELD'}
+                                <Activity size={20} />
+                                ACTIVAR ESTRATEGIA
                             </button>
                         </div>
                     </motion.div>
                 )}
 
+                {/* ── STEP 4: VAULT LIVE VIEW ── */}
                 {step === 'vault_view' && activeVault && (
                     <motion.div
                         key="vault_view"
@@ -318,7 +439,7 @@ export default function NewVaultFlow() {
                                     <div className="p-2 rounded-lg bg-grinta-accent/20 text-grinta-accent">
                                         <Bot size={20} className="" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-white font-syncopate uppercase tracking-widest">Actividad Agéntica en Vivo</h3>
+                                    <h3 className="text-sm font-bold text-white font-syncopate uppercase tracking-widest">Actividad Agentica en Vivo</h3>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-6">
@@ -327,7 +448,7 @@ export default function NewVaultFlow() {
                                             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
                                                 <Zap size={16} />
                                             </div>
-                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Métricas</span>
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Metricas</span>
                                         </div>
                                         <div className="text-2xl font-bold text-white mb-1">{activeVault.flashMints}</div>
                                         <div className="text-[9px] font-bold text-grinta-text-secondary uppercase">Flash-Mints Ejecutados</div>
@@ -338,7 +459,7 @@ export default function NewVaultFlow() {
                                             <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
                                                 <Activity size={16} />
                                             </div>
-                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Métricas</span>
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Metricas</span>
                                         </div>
                                         <div className="text-2xl font-bold text-white mb-1">{activeVault.agentActions}</div>
                                         <div className="text-[9px] font-bold text-grinta-text-secondary uppercase">Oportunidades de Arbitraje</div>
@@ -409,16 +530,18 @@ export default function NewVaultFlow() {
                                 <h3 className="text-[11px] font-bold text-white font-syncopate uppercase tracking-widest mb-6">Detalles del Vault</h3>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center py-3 border-b border-white/5">
-                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">ID</span>
-                                        <span className="text-[10px] text-white/70 font-mono">{activeVault.id}</span>
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">SAFE ID</span>
+                                        <span className="text-[10px] text-white/70 font-mono">
+                                            {activeVault.safeId ? `#${activeVault.safeId} (on-chain)` : activeVault.id}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between items-center py-3 border-b border-white/5">
                                         <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Estrategia</span>
                                         <span className="text-[10px] text-grinta-accent font-bold">Yield Grinta (Agentic)</span>
                                     </div>
                                     <div className="flex justify-between items-center py-3 border-b border-white/5">
-                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Depósito Inicial</span>
-                                        <span className="text-[10px] text-white font-bold">{activeVault.amount} BTC</span>
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Deposito Inicial</span>
+                                        <span className="text-[10px] text-white font-bold">{activeVault.amount} WBTC</span>
                                     </div>
                                     <div className="flex justify-between items-center py-3">
                                         <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Estado</span>
@@ -477,7 +600,7 @@ export default function NewVaultFlow() {
     );
 }
 
-// Sub-components as needed or icons
+// Sub-components
 function Bot({ size, className = "" }: { size: number, className?: string }) {
     return (
         <svg

@@ -11,6 +11,7 @@ interface LogEntry {
 
 interface Vault {
     id: string;
+    safeId?: number;
     amount: number;
     strategy: string;
     apy: number;

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Bot, BarChart3, Wallet, Send, Twitter, Disc, PlusCircle, Folder, Globe, Activity } from 'lucide-react';
+import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 
 export default function Sidebar() {
   const location = useLocation();
+  const { isConnected } = useAccount();
   const { setStep, startNewFlow, balanceL2, vaults } = useVaults();
 
   const menuItems = [
@@ -81,7 +83,7 @@ export default function Sidebar() {
           {/* New Vault CTA */}
           <button
             onClick={() => {
-              if (vaults.length > 0) {
+              if (isConnected) {
                 startNewFlow();
               } else {
                 setStep('connect');
