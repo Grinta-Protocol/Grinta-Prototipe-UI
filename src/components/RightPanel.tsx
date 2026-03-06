@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Percent, Bitcoin, ShieldAlert, Copy, ExternalLink, Check, RefreshCw } from 'lucide-react';
+import { useRates } from '../hooks/useGrinta';
+import { config } from '../config/contracts';
 
 export default function RightPanel() {
   const [copied, setCopied] = useState(false);
   const [btcPrice, setBtcPrice] = useState<string>('Loading...');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const gritTokenAddress = "0x02f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421";
-  const shortAddress = "0x02f4...5421";
+  
+  const rates = useRates();
+  
+  const gritTokenAddress = config.safeEngineAddress;
+  const shortAddress = `${gritTokenAddress.slice(0, 6)}...${gritTokenAddress.slice(-4)}`;
 
   const fetchBtcPrice = async () => {
     setIsRefreshing(true);
@@ -93,7 +98,7 @@ export default function RightPanel() {
           </div>
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Price</div>
-            <div className="text-2xl font-bold text-white">$1.00</div>
+            <div className="text-2xl font-bold text-white">{rates.loading ? 'Loading...' : rates.redemptionPrice}</div>
           </div>
         </div>
       </div>
@@ -109,7 +114,7 @@ export default function RightPanel() {
           </div>
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Rate</div>
-            <div className="text-2xl font-bold text-white">0%/s</div>
+            <div className="text-2xl font-bold text-white">{rates.loading ? 'Loading...' : rates.redemptionRate}</div>
           </div>
         </div>
       </div>
@@ -152,7 +157,7 @@ export default function RightPanel() {
           </div>
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Liquidation Ratio</div>
-            <div className="text-2xl font-bold text-white">150.00%</div>
+            <div className="text-2xl font-bold text-white">{rates.loading ? 'Loading...' : rates.liquidationRatio}</div>
           </div>
         </div>
       </div>
