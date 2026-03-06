@@ -3,7 +3,7 @@ import { useVaults } from '../../context/VaultContext';
 import { Wallet, ArrowDownRight, ArrowUpRight, Bitcoin, CreditCard, ChevronRight } from 'lucide-react';
 
 export default function WalletView() {
-    const { balanceL1, balanceL2, vaults } = useVaults();
+    const { balanceL1, balanceL2, vaults, claimAllYield } = useVaults();
 
     const totalUserYield = vaults.reduce((acc, v) => acc + v.yieldEarned, 0);
     const totalVaultDeposits = vaults.reduce((acc, v) => acc + v.amount, 0);
@@ -49,6 +49,7 @@ export default function WalletView() {
                     </div>
 
                     <button
+                        onClick={() => claimAllYield()}
                         disabled={totalUserYield <= 0}
                         className="px-8 py-5 bg-grinta-accent text-black font-bold text-lg rounded-[20px] hover:scale-105 transition-all shadow-[0_10px_30px_rgba(74,222,128,0.3)] disabled:opacity-50 disabled:grayscale disabled:scale-100 flex items-center gap-3"
                     >
@@ -60,43 +61,33 @@ export default function WalletView() {
 
             {/* Recent History (Simulated) */}
             <div className="bg-grinta-card border border-grinta-card-border rounded-[32px] p-8 shadow-xl">
-                <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
-                    Historial de Transacciones
-                </h3>
-                <div className="space-y-2">
-                    {vaults.map((v, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-grinta-accent/10 flex items-center justify-center text-grinta-accent">
-                                    <ArrowDownRight size={20} />
+                <div className="space-y-4">
+                    {vaults.length === 0 ? (
+                        <div className="py-12 flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-grinta-text-secondary opacity-30 mb-4">
+                                <Wallet size={32} />
+                            </div>
+                            <p className="text-sm text-grinta-text-secondary">No hay transacciones registradas.<br />Tus depósitos y operaciones de Vault aparecerán aquí.</p>
+                        </div>
+                    ) : (
+                        vaults.map((v, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-grinta-accent/10 flex items-center justify-center text-grinta-accent">
+                                        <ArrowDownRight size={20} />
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold text-white">Depósito en Vault {v.id}</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">Exitoso • L2 Network</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="text-sm font-bold text-white">Depósito en Vault {v.id}</div>
-                                    <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">Exitoso • L2 Network</div>
+                                <div className="text-right">
+                                    <div className="text-sm font-bold text-white">-{v.amount.toFixed(2)} BTC</div>
+                                    <div className="text-[10px] text-grinta-text-secondary">Justo ahora</div>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <div className="text-sm font-bold text-white">-{v.amount.toFixed(2)} BTC</div>
-                                <div className="text-[10px] text-grinta-text-secondary">Justo ahora</div>
-                            </div>
-                        </div>
-                    ))}
-
-                    <div className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
-                                <ArrowDownRight size={20} />
-                            </div>
-                            <div>
-                                <div className="text-sm font-bold text-white">Bridge L1 → L2</div>
-                                <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">Exitoso • Bridge Protocol</div>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-sm font-bold text-white">+10.00 BTC</div>
-                            <div className="text-[10px] text-grinta-text-secondary">Hace 2 horas</div>
-                        </div>
-                    </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>

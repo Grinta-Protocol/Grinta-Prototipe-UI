@@ -27,6 +27,7 @@ interface MarketState {
     btcPrice: number;
     redemptionRate: number;
     redemptionPrice: number;
+    redemptionPriceHistory: number[];
     liquidationRatio: number;
     tvl: number;
     flashMints24h: number;
@@ -58,7 +59,7 @@ const VaultContext = createContext<VaultContextType | undefined>(undefined);
 export function VaultProvider({ children }: { children: React.ReactNode }) {
     const [step, setStep] = useState<Step>('main_dashboard');
     const [vaults, setVaults] = useState<Vault[]>([]);
-    const [balanceL1, setBalanceL1] = useState(10.5); // Initial simulated L1 balance
+    const [balanceL1, setBalanceL1] = useState(5.0); // Initial L1 balance to allow bridging
     const [balanceL2, setBalanceL2] = useState(0);
     const [activeVaultId, setActiveVaultId] = useState<string | null>(null);
 
@@ -67,30 +68,53 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         btcPrice: 70266.00,
         redemptionRate: 0.00,
         redemptionPrice: 1.000,
+        redemptionPriceHistory: Array(20).fill(1.000),
         liquidationRatio: 150.00,
-        tvl: 2150.45,
-        flashMints24h: 1245,
-        arbitrageVol: 0.85
+        tvl: 0.00,
+        flashMints24h: 0,
+        arbitrageVol: 0.00
     });
 
     const marketRef = useRef(market);
     marketRef.current = market;
 
+    const vaultsRef = useRef(vaults);
+    vaultsRef.current = vaults;
+
     useEffect(() => {
         const interval = setInterval(() => {
+            const activeVaults = vaultsRef.current;
+            const totalCollateral = activeVaults.reduce((sum, v) => sum + v.amount, 0);
+
+            // Only update market/pid if there is actual collateral in the system
+            if (totalCollateral === 0) {
+                setMarket(prev => ({
+                    ...prev,
+                    btcPrice: prev.btcPrice + (Math.random() - 0.5) * 50,
+                    tvl: 0,
+                    redemptionPriceHistory: [...prev.redemptionPriceHistory.slice(1), prev.redemptionPrice]
+                }));
+                return;
+            }
+
             // 1. Update BTC Price (Random Walk)
             const btcChange = (Math.random() - 0.5) * 50;
             const newBtcPrice = marketRef.current.btcPrice + btcChange;
 
             // 2. Update Redemption Rate (PID Simulation)
-            const rateChange = (Math.random() - 0.5) * 0.02;
+            // Error = (Market Price - Redemption Price) / Redemption Price
+            // Simulating market price drift for PID logic
+            const marketPriceDrift = 1.000 + (Math.sin(Date.now() / 10000) * 0.01);
+            const error = marketPriceDrift - marketRef.current.redemptionPrice;
+            const rateChange = error * 0.05 + (Math.random() - 0.5) * 0.005;
             const newRedemptionRate = Math.max(-0.5, Math.min(0.5, marketRef.current.redemptionRate + rateChange));
 
             // 3. Update Redemption Price (Compound Growth)
             const newRedemptionPrice = marketRef.current.redemptionPrice * (1 + (newRedemptionRate / 10000));
 
-            // 4. Update TVL (Incremental Growth)
-            const newTvl = marketRef.current.tvl + (Math.random() * 0.1);
+            // 4. Update TVL (Incremental Growth based on current vaults)
+            const totalVaultBalance = activeVaults.reduce((sum, v) => sum + v.amount + v.yieldEarned, 0);
+            const newTvl = totalVaultBalance + (Math.random() * 0.1);
 
             // 5. Update Daily Metrics
             const newFlashMints24h = marketRef.current.flashMints24h + (Math.random() > 0.7 ? 1 : 0);
@@ -100,6 +124,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
                 btcPrice: newBtcPrice,
                 redemptionRate: newRedemptionRate,
                 redemptionPrice: newRedemptionPrice,
+                redemptionPriceHistory: [...marketRef.current.redemptionPriceHistory.slice(1), newRedemptionPrice],
                 liquidationRatio: 150.00,
                 tvl: newTvl,
                 flashMints24h: newFlashMints24h,
@@ -159,6 +184,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
     const addVault = (vault: Vault) => {
         setVaults(prev => [...prev, vault]);
+        // When creating a vault, it already subtracted from balanceL2 in the flow,
+        // but let's double check if we need to do it here. 
+        // In NewVaultFlow, addVault is called with the total L2 balance usually.
     };
 
     const updateVault = (id: string, updates: Partial<Vault>) => {
@@ -166,6 +194,11 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     };
 
     const depositToVault = (id: string, amount: number) => {
+        if (balanceL2 < amount) {
+            alert("No tienes suficiente BTC disponible en L2.");
+            return;
+        }
+
         setVaults(prev => prev.map(v => {
             if (v.id === id) {
                 const newLogs = [...v.logs, {
@@ -178,18 +211,24 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
             }
             return v;
         }));
+        setBalanceL2(prev => prev - amount);
     };
 
     const withdrawFromVault = (id: string, amount: number) => {
         setVaults(prev => prev.map(v => {
             if (v.id === id) {
+                const withdrawable = Math.min(v.amount, amount);
                 const newLogs = [...v.logs, {
                     id: Math.random().toString(36).substr(2, 9),
-                    message: `Retiro Manual: ${amount} WBTC de colateral`,
+                    message: `Retiro Manual: ${withdrawable} WBTC de colateral`,
                     timestamp: new Date(),
                     type: 'info'
                 } as LogEntry];
-                return { ...v, amount: Math.max(0, v.amount - amount), logs: newLogs.slice(-20) };
+
+                // Add withdrawn amount back to L2 balance
+                setBalanceL2(curr => curr + withdrawable);
+
+                return { ...v, amount: Math.max(0, v.amount - withdrawable), logs: newLogs.slice(-20) };
             }
             return v;
         }));
@@ -225,13 +264,31 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         }));
     };
 
+    const claimAllYield = () => {
+        let totalYield = 0;
+        setVaults(prev => prev.map(v => {
+            totalYield += v.yieldEarned;
+            return {
+                ...v,
+                yieldEarned: 0,
+                logs: [...v.logs, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `Yield Reclamado: ${v.yieldEarned.toFixed(6)} BTC`,
+                    timestamp: new Date(),
+                    type: 'success'
+                }].slice(-20)
+            };
+        }));
+        setBalanceL2(prev => prev + totalYield);
+    };
+
     const startNewFlow = () => {
         setStep('deposit');
     };
 
     return (
         <VaultContext.Provider value={{
-            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, depositToVault, withdrawFromVault, borrowGrit, repayGrit, startNewFlow, market
+            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, depositToVault, withdrawFromVault, borrowGrit, repayGrit, startNewFlow, market, claimAllYield
         }}>
             {children}
         </VaultContext.Provider>

@@ -1,12 +1,16 @@
 import React from 'react';
+import { useVaults } from '../../context/VaultContext';
 import { Server, Shield, Globe, Cpu, Wifi } from 'lucide-react';
 
 export default function NetworkMetrics() {
+    const { vaults } = useVaults();
+    const hasVaults = vaults.length > 0;
+
     const agentNodes = [
-        { id: 'Grinta-Agent-Node-1', region: 'USEAST', status: 'Online', uptime: '99.99%', load: '24%' },
-        { id: 'Grinta-Agent-Node-2', region: 'EUWEST', status: 'Online', uptime: '99.98%', load: '18%' },
-        { id: 'Grinta-Agent-Node-3', region: 'ASIASE', status: 'Online', uptime: '100.00%', load: '32%' },
-        { id: 'Grinta-Agent-Node-4', region: 'LATSAM', status: 'Online', uptime: '99.95%', load: '12%' },
+        { id: 'Grinta-Agent-Node-1', region: 'USEAST', status: hasVaults ? 'Online' : 'Standby', uptime: hasVaults ? '99.99%' : '0%', load: hasVaults ? '24%' : '0%' },
+        { id: 'Grinta-Agent-Node-2', region: 'EUWEST', status: hasVaults ? 'Online' : 'Standby', uptime: hasVaults ? '99.98%' : '0%', load: hasVaults ? '18%' : '0%' },
+        { id: 'Grinta-Agent-Node-3', region: 'ASIASE', status: hasVaults ? 'Online' : 'Standby', uptime: hasVaults ? '100.00%' : '0%', load: hasVaults ? '32%' : '0%' },
+        { id: 'Grinta-Agent-Node-4', region: 'LATSAM', status: hasVaults ? 'Online' : 'Standby', uptime: hasVaults ? '99.95%' : '0%', load: hasVaults ? '12%' : '0%' },
     ];
 
     return (
@@ -18,10 +22,10 @@ export default function NetworkMetrics() {
                         <Globe size={18} className="text-grinta-accent" /> Estado del Rollup (L2)
                     </h3>
                     <div className="space-y-6">
-                        <InfoRow label="Tiempo de Bloque" value="0.5s" />
-                        <InfoRow label="Costo Promedio Tx" value="$0.001" />
-                        <InfoRow label="Finalidad L1" value="~12 min" />
-                        <InfoRow label="Estado del Sequencer" value="Operativo" status="success" />
+                        <InfoRow label="Tiempo de Bloque" value={hasVaults ? "0.5s" : "---"} />
+                        <InfoRow label="Costo Promedio Tx" value={hasVaults ? "$0.001" : "---"} />
+                        <InfoRow label="Finalidad L1" value={hasVaults ? "~12 min" : "---"} />
+                        <InfoRow label="Estado del Sequencer" value={hasVaults ? "Operativo" : "Inactivo"} status={hasVaults ? "success" : "warning"} />
                     </div>
                 </div>
 
@@ -30,10 +34,10 @@ export default function NetworkMetrics() {
                         <Shield size={18} className="text-grinta-accent" /> Seguridad de Agentes
                     </h3>
                     <div className="space-y-6">
-                        <InfoRow label="Protocolo de Consenso" value="DPoS (Delegated Proof of Stake)" />
+                        <InfoRow label="Protocolo de Consenso" value="DPoS (Proof of Stake)" />
                         <InfoRow label="Agentes en Slashing" value="0%" />
-                        <InfoRow label="TVL Protegido (Insurance)" value="500 BTC" />
-                        <InfoRow label="Auditoría Real-Time" value="Pass" status="success" />
+                        <InfoRow label="TVL Protegido (Insurance)" value={hasVaults ? "500 BTC" : "0 BTC"} />
+                        <InfoRow label="Auditoría Real-Time" value={hasVaults ? "Pass" : "Waiting"} status={hasVaults ? "success" : "warning"} />
                     </div>
                 </div>
             </div>
@@ -67,14 +71,14 @@ export default function NetworkMetrics() {
                                     </td>
                                     <td className="py-4 text-sm text-grinta-text-secondary">{node.region}</td>
                                     <td className="py-4">
-                                        <span className="flex items-center gap-1.5 text-xs text-grinta-accent font-bold">
+                                        <span className={`flex items-center gap-1.5 text-xs font-bold ${hasVaults ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-50'}`}>
                                             <Wifi size={12} /> {node.status}
                                         </span>
                                     </td>
                                     <td className="py-4 text-sm font-mono text-white">{node.uptime}</td>
                                     <td className="py-4">
                                         <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                            <div className="h-full bg-grinta-accent" style={{ width: node.load }}></div>
+                                            <div className={`h-full ${hasVaults ? 'bg-grinta-accent' : 'bg-white/10'}`} style={{ width: node.load }}></div>
                                         </div>
                                     </td>
                                 </tr>

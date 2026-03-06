@@ -54,25 +54,40 @@ export default function NewVaultFlow() {
 
     // Paso 2: Depósito
     const handleDeposit = () => {
+        const amount = parseFloat(depositAmount);
+        if (amount <= 0) {
+            alert("El monto debe ser mayor a 0.");
+            return;
+        }
+        if (amount > balanceL1) {
+            alert("No tienes suficiente balance en L1.");
+            return;
+        }
+
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
-            const amount = parseFloat(depositAmount);
             setBalanceL1(prev => prev - amount);
-            setBalanceL2(balanceL2 + amount);
+            setBalanceL2(prev => prev + amount);
             setStep('create_vault');
         }, 1500);
     };
 
     // Paso 3: Crear Vault
     const handleCreateVault = () => {
+        const amountToVault = parseFloat(depositAmount);
+        if (amountToVault > balanceL2) {
+            alert("No tienes suficiente balance en L2.");
+            return;
+        }
+
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
             const newVaultId = `v-${Math.random().toString(36).substr(2, 9)}`;
             addVault({
                 id: newVaultId,
-                amount: parseFloat(depositAmount),
+                amount: amountToVault,
                 strategy: selectedStrategy === 'agentic' ? 'Yield Grinta (Agentic)' : 'Staking Pasivo (Manual)',
                 type: selectedStrategy,
                 apy: selectedStrategy === 'agentic' ? 12.5 : 4.2,
@@ -83,14 +98,14 @@ export default function NewVaultFlow() {
                 logs: [
                     {
                         id: '1',
-                        message: `Vault ${selectedStrategy === 'agentic' ? 'Agéntico' : 'Manual'} Creado: Depósito de ${depositAmount} BTC confirmado.`,
+                        message: `Vault ${selectedStrategy === 'agentic' ? 'Agéntico' : 'Manual'} Creado: Depósito inicial de ${amountToVault} BTC confirmado.`,
                         timestamp: new Date(),
                         type: 'info'
                     }
                 ],
                 createdAt: new Date()
             });
-            setBalanceL2(0);
+            setBalanceL2(prev => prev - amountToVault);
             setActiveVaultId(newVaultId);
             setStep('vault_view');
         }, 2000);
@@ -361,10 +376,16 @@ export default function NewVaultFlow() {
 
                                             {/* Control Actions Section nested inside */}
                                             <div className="w-full pt-8 border-t border-white/5">
-                                                <h3 className="text-xs font-bold text-white font-syncopate uppercase tracking-widest mb-6 flex items-center gap-2">
-                                                    <Settings size={16} className={accentText} />
-                                                    Acciones de Control L2
-                                                </h3>
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <h3 className="text-xs font-bold text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
+                                                        <Settings size={16} className={accentText} />
+                                                        Acciones de Control L2
+                                                    </h3>
+                                                    <div className="flex items-center gap-2 px-3 py-1 bg-black/40 border border-white/10 rounded-lg">
+                                                        <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">L2 Disponible:</span>
+                                                        <span className="text-xs font-bold text-grinta-accent">{balanceL2.toFixed(4)} BTC</span>
+                                                    </div>
+                                                </div>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                     <button
                                                         onClick={() => depositToVault(activeVault.id, 0.5)}

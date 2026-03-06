@@ -27,7 +27,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: 'Dashboard', icon: BarChart3, path: '/app' },
     { name: `Mis Vaults (${vaults.length})`, icon: LayoutDashboard, path: '/app/vaults' },
-    { name: 'Métricas de Red', icon: Globe, path: '/app/metrics' },
+    // { name: 'Métricas de Red', icon: Globe, path: '/app/metrics' },
     { name: 'Billetera', icon: Wallet, path: '/app/wallet' },
   ];
 
