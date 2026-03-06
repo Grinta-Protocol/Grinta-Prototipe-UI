@@ -4,17 +4,19 @@ import { Wallet, ArrowRight, Download, PlusCircle, CheckCircle2, TrendingUp, Zap
 import { useAccount, useConnect, useSendTransaction } from '@starknet-react/core';
 import { useVaults, Step } from '../context/VaultContext';
 import { config } from '../config/contracts';
-import { getSafeEngine, parseBtcAmount, formatBtcAmount } from '../lib/starknet';
+import { getSafeEngine, parseBtcAmount, parseGritAmount, btcToWad, formatBtcAmount } from '../lib/starknet';
 import { useWbtcBalance } from '../hooks/useGrinta';
 
 export default function NewVaultFlow() {
-    const { step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, addVault, setActiveVaultId, activeVaultId, depositToVault, withdrawFromVault, borrowGrit, repayGrit } = useVaults();
+    const { step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, addVault, setActiveVaultId, activeVaultId } = useVaults();
     const [isProcessing, setIsProcessing] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
     const [selectedStrategy, setSelectedStrategy] = useState<'agentic' | 'manual'>('agentic');
     const [txStatus, setTxStatus] = useState<string | null>(null);
     const [connectingWallet, setConnectingWallet] = useState(false);
     const [createdSafeId, setCreatedSafeId] = useState<number | null>(null);
+    const [actionAmount, setActionAmount] = useState('');
+    const [actionTxStatus, setActionTxStatus] = useState<string | null>(null);
 
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
@@ -139,6 +141,82 @@ export default function NewVaultFlow() {
         });
         setActiveVaultId(newVaultId);
         setStep('vault_view');
+    };
+
+    const handleVaultAction = async (action: 'deposit' | 'withdraw' | 'borrow' | 'repay') => {
+        if (!address || !activeVaultId || !actionAmount || isPending) return;
+        const vault = vaults.find(v => v.id === activeVaultId);
+        if (!vault?.safeId) {
+            setActionTxStatus('Error: No on-chain SAFE ID found for this vault');
+            return;
+        }
+
+        try {
+            setActionTxStatus(`Processing ${action}...`);
+            const sid = vault.safeId.toString();
+            let calls: { contractAddress: string; entrypoint: string; calldata: string[] }[] = [];
+
+            if (action === 'deposit') {
+                const parsed = parseBtcAmount(actionAmount);
+                if (parsed <= 0n) return;
+                calls = [
+                    {
+                        contractAddress: config.wbtcAddress,
+                        entrypoint: 'approve',
+                        calldata: [config.collateralJoinAddress, `0x${parsed.toString(16)}`, '0x0'],
+                    },
+                    {
+                        contractAddress: config.safeManagerAddress,
+                        entrypoint: 'deposit',
+                        calldata: [sid, `0x${parsed.toString(16)}`, '0x0'],
+                    },
+                ];
+            } else if (action === 'withdraw') {
+                const btcParsed = parseBtcAmount(actionAmount);
+                const wadAmount = btcToWad(btcParsed);
+                if (wadAmount <= 0n) return;
+                calls = [
+                    {
+                        contractAddress: config.safeManagerAddress,
+                        entrypoint: 'withdraw',
+                        calldata: [sid, `0x${wadAmount.toString(16)}`, '0x0'],
+                    },
+                ];
+            } else if (action === 'borrow') {
+                const parsed = parseGritAmount(actionAmount);
+                if (parsed <= 0n) return;
+                calls = [
+                    {
+                        contractAddress: config.safeManagerAddress,
+                        entrypoint: 'borrow',
+                        calldata: [sid, `0x${parsed.toString(16)}`, '0x0'],
+                    },
+                ];
+            } else if (action === 'repay') {
+                const parsed = parseGritAmount(actionAmount);
+                if (parsed <= 0n) return;
+                calls = [
+                    {
+                        contractAddress: config.safeEngineAddress,
+                        entrypoint: 'approve',
+                        calldata: [config.safeManagerAddress, `0x${parsed.toString(16)}`, '0x0'],
+                    },
+                    {
+                        contractAddress: config.safeManagerAddress,
+                        entrypoint: 'repay',
+                        calldata: [sid, `0x${parsed.toString(16)}`, '0x0'],
+                    },
+                ];
+            }
+
+            await sendAsync(calls);
+            setActionTxStatus(`${action} transaction sent!`);
+            setActionAmount('');
+            refetchBalance();
+        } catch (err) {
+            console.error(`${action} failed:`, err);
+            setActionTxStatus(`Error: ${(err as Error).message}`);
+        }
     };
 
     const activeVault = vaults.find(v => v.id === activeVaultId);
@@ -477,50 +555,80 @@ export default function NewVaultFlow() {
                                                     <Settings size={16} className={accentText} />
                                                     Acciones de Control L2
                                                 </h3>
+
+                                                {/* Amount Input */}
+                                                <div className="mb-4">
+                                                    <input
+                                                        type="text"
+                                                        inputMode="decimal"
+                                                        value={actionAmount}
+                                                        onChange={(e) => {
+                                                            if (/^\d*\.?\d*$/.test(e.target.value)) setActionAmount(e.target.value);
+                                                        }}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xl font-bold text-white placeholder:text-white/20 outline-none hover:border-white/20 focus:border-white/30 transition-colors"
+                                                        placeholder="0.0 (WBTC for deposit/withdraw, GRIT for borrow/repay)"
+                                                    />
+                                                </div>
+
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                                     <button
-                                                        onClick={() => depositToVault(activeVault.id, 0.5)}
-                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group hover:bg-white/10 hover:border-white/20"
+                                                        onClick={() => handleVaultAction('deposit')}
+                                                        disabled={!actionAmount || isPending}
+                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group hover:bg-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed"
                                                     >
                                                         <div className={`p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform ${accentText}`}>
                                                             <PlusCircle size={20} />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Deposit WBTC</span>
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">
+                                                            {isPending ? 'Confirming...' : 'Deposit WBTC'}
+                                                        </span>
                                                     </button>
 
                                                     <button
-                                                        onClick={() => withdrawFromVault(activeVault.id, 0.5)}
-                                                        disabled={activeVault.amount <= 0}
-                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:grayscale hover:bg-white/10 hover:border-white/20"
+                                                        onClick={() => handleVaultAction('withdraw')}
+                                                        disabled={!actionAmount || isPending}
+                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20"
                                                     >
                                                         <div className={`p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform ${accentText}`}>
                                                             <Download size={20} />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Withdraw WBTC</span>
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">
+                                                            {isPending ? 'Confirming...' : 'Withdraw WBTC'}
+                                                        </span>
                                                     </button>
 
                                                     <button
-                                                        onClick={() => borrowGrit(activeVault.id, 100)}
-                                                        disabled={activeVault.amount <= 0}
-                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:grayscale hover:bg-white/10 hover:border-white/20"
+                                                        onClick={() => handleVaultAction('borrow')}
+                                                        disabled={!actionAmount || isPending}
+                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20"
                                                     >
                                                         <div className="p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform text-blue-400">
                                                             <Zap size={20} />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Borrow GRIT</span>
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">
+                                                            {isPending ? 'Confirming...' : 'Borrow GRIT'}
+                                                        </span>
                                                     </button>
 
                                                     <button
-                                                        onClick={() => repayGrit(activeVault.id, 100)}
-                                                        disabled={activeVault.amount <= 0}
-                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:grayscale hover:bg-white/10 hover:border-white/20"
+                                                        onClick={() => handleVaultAction('repay')}
+                                                        disabled={!actionAmount || isPending}
+                                                        className="flex flex-col items-center justify-center gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl transition-all group disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 hover:border-white/20"
                                                     >
                                                         <div className="p-2 rounded-lg bg-black/40 group-hover:scale-110 transition-transform text-purple-400">
                                                             <RefreshCcw size={20} />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Repay GRIT</span>
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-tighter">
+                                                            {isPending ? 'Confirming...' : 'Repay GRIT'}
+                                                        </span>
                                                     </button>
                                                 </div>
+
+                                                {actionTxStatus && (
+                                                    <div className="mt-4 p-3 bg-black/40 border border-white/10 rounded-xl">
+                                                        <p className={`text-xs ${actionTxStatus.startsWith('Error') ? 'text-red-400' : 'text-grinta-accent'}`}>{actionTxStatus}</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
