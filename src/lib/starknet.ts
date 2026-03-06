@@ -9,9 +9,20 @@ const WAD_DECIMALS = 18;
 const RAY_DECIMALS = 27;
 const WBTC_DECIMALS = 8;
 
+const WBTC_ABI = [
+  {
+    type: "function",
+    name: "balance_of",
+    inputs: [{ name: "account", type: "core::starknet::contract_address::ContractAddress" }],
+    outputs: [{ type: "core::integer::u256" }],
+    state_mutability: "view",
+  },
+];
+
 let _provider: RpcProvider | undefined;
 let _safeManager: Contract | undefined;
 let _safeEngine: Contract | undefined;
+let _wbtcContract: Contract | undefined;
 
 export function getProvider(): RpcProvider {
   if (!_provider) {
@@ -40,6 +51,25 @@ export function getSafeEngine(): Contract {
     });
   }
   return _safeEngine;
+}
+
+export function getWbtcContract(): Contract {
+  if (!_wbtcContract) {
+    _wbtcContract = new Contract({
+      abi: WBTC_ABI as any,
+      address: config.wbtcAddress,
+      provider: getProvider(),
+    });
+  }
+  return _wbtcContract;
+}
+
+export function formatBtcAmount(value: bigint): string {
+  const whole = value / 10n ** BigInt(WBTC_DECIMALS);
+  const frac = value % 10n ** BigInt(WBTC_DECIMALS);
+  if (frac === 0n) return whole.toString();
+  const fracStr = frac.toString().padStart(WBTC_DECIMALS, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
 }
 
 export interface StarknetCall {

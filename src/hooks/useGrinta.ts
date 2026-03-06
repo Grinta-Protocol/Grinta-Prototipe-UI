@@ -4,6 +4,7 @@ import { config } from "../config/contracts";
 import {
   getSafeEngine,
   getSafeManager,
+  getWbtcContract,
   toBigInt,
   formatRay,
   formatUsd,
@@ -169,6 +170,32 @@ export function useUserSafes() {
   }, [fetchSafes]);
 
   return { safes, isLoading, refetch: fetchSafes, debug };
+}
+
+// ─── WBTC Balance ───
+
+export function useWbtcBalance() {
+  const { address } = useAccount();
+  const [balance, setBalance] = useState<bigint>(0n);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchBalance = useCallback(async () => {
+    if (!address) { setBalance(0n); return; }
+    setIsLoading(true);
+    try {
+      const wbtc = getWbtcContract();
+      const result = await wbtc.balance_of(address);
+      setBalance(toBigInt(result));
+    } catch (e) {
+      console.error("[useWbtcBalance] error:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]);
+
+  useEffect(() => { fetchBalance(); }, [fetchBalance]);
+
+  return { balance, isLoading, refetch: fetchBalance };
 }
 
 // ─── Max Borrow for a SAFE ───

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, Globe, Activity, Bot } from 'lucide-react';
+import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 
 export default function Sidebar() {
   const location = useLocation();
+  const { isConnected } = useAccount();
   const { step, setStep, startNewFlow, balanceL2, vaults } = useVaults();
 
   const isFlowActive = ['connect', 'deposit', 'create_vault'].includes(step);
@@ -38,7 +40,6 @@ export default function Sidebar() {
   return (
     <aside className="w-64 h-screen bg-[#050708] border-r border-white/5 flex flex-col justify-between fixed left-0 top-0 z-20 overflow-y-auto">
       <div>
-        {/* Logo */}
         <Link
           to="/"
           onClick={(e) => handleNavigation(e, '/')}
@@ -47,7 +48,6 @@ export default function Sidebar() {
           <span className="text-2xl font-extrabold tracking-tighter uppercase font-syncopate text-white">Grinta</span>
         </Link>
 
-        {/* Navigation */}
         <nav className="mt-4 px-3 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -71,7 +71,6 @@ export default function Sidebar() {
             );
           })}
 
-          {/* Isolated Section: Manage Safe */}
           <div className="pt-6 pb-2 px-2">
             <h3 className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-3 px-2">Core Protocol</h3>
             {isolatedItems.map((item) => {
@@ -98,13 +97,11 @@ export default function Sidebar() {
             })}
           </div>
 
-          {/* Separator */}
           <div className="my-6 border-t border-white/5 mx-2"></div>
 
-          {/* New Vault CTA */}
           <button
             onClick={() => {
-              if (vaults.length > 0) {
+              if (isConnected) {
                 startNewFlow();
               } else {
                 setStep('connect');
@@ -118,9 +115,7 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer Cards */}
       <div className="p-4 space-y-3">
-        {/* Feedback Card */}
         <a
           href="https://x.com/intent/post?text=@GrintaProtocol%20Feedback:%20"
           target="_blank"
@@ -136,7 +131,6 @@ export default function Sidebar() {
           </p>
         </a>
 
-        {/* Donation Card */}
         <div className="p-4 rounded-2xl bg-grinta-accent/5 border border-grinta-accent/10">
           <div className="flex items-center gap-3 mb-2">
             <Disc size={16} className="text-grinta-accent" />
