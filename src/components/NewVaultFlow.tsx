@@ -1,0 +1,509 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Wallet, ArrowRight, Download, PlusCircle, CheckCircle2, TrendingUp, Zap, Activity, ChevronRight, Loader2, Link as LinkIcon, Bitcoin, Terminal, Clock, ShieldCheck } from 'lucide-react';
+import { useVaults, Step } from '../context/VaultContext';
+
+export default function NewVaultFlow() {
+    const { step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, addVault, setActiveVaultId, activeVaultId, updateVault } = useVaults();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [depositAmount, setDepositAmount] = useState('1.5');
+    const [selectedStrategy, setSelectedStrategy] = useState('Yield Grinta');
+
+    const steps = [
+        { id: 'connect', label: 'Conexión' },
+        { id: 'deposit', label: 'Depósito' },
+        { id: 'create_vault', label: 'Estrategia' },
+        { id: 'vault_view', label: 'Vault Live' }
+    ];
+
+    const currentStepIdx = steps.findIndex(s => s.id === step);
+
+    // Paso 1: Conectar Billetera
+    const handleConnect = () => {
+        setIsProcessing(true);
+        setTimeout(() => {
+            setIsProcessing(false);
+            setStep('deposit');
+        }, 1000);
+    };
+
+    // Paso 2: Depósito
+    const handleDeposit = () => {
+        setIsProcessing(true);
+        setTimeout(() => {
+            setIsProcessing(false);
+            const amount = parseFloat(depositAmount);
+            setBalanceL1(prev => prev - amount);
+            setBalanceL2(balanceL2 + amount);
+            setStep('create_vault');
+        }, 1500);
+    };
+
+    // Paso 3: Crear Vault
+    const handleCreateVault = () => {
+        setIsProcessing(true);
+        setTimeout(() => {
+            setIsProcessing(false);
+            const newVaultId = `v-${Math.random().toString(36).substr(2, 9)}`;
+            const newVault = {
+                id: newVaultId,
+                amount: parseFloat(depositAmount),
+                strategy: 'Yield Grinta (Agentic)',
+                apy: 12.5,
+                yieldEarned: 0,
+                flashMints: 0,
+                agentActions: 0,
+                logs: [
+                    { id: '1', message: 'Vault Creado: Depósito de ' + depositAmount + ' BTC confirmado en L2.', timestamp: new Date(), type: 'info' as const }
+                ],
+                createdAt: new Date()
+            };
+            addVault(newVault);
+            setBalanceL2(0);
+            setActiveVaultId(newVaultId);
+            setStep('vault_view');
+        }, 2000);
+    };
+
+    // No interval needed here as VaultContext handles global simulation
+    useEffect(() => {
+        // Just ensuring we have an active vault if needed
+    }, [step, activeVaultId]);
+
+    const activeVault = vaults.find(v => v.id === activeVaultId);
+
+    return (
+        <div className="w-full max-w-6xl mx-auto py-8 px-6">
+            {/* Step Indicator */}
+            {step !== 'main_dashboard' && step !== 'vault_view' && (
+                <div className="flex items-center justify-center mb-12">
+                    <div className="flex items-center gap-4">
+                        {steps.slice(0, 3).map((s, idx) => {
+                            const isPast = steps.findIndex(step => step.id === s.id) < currentStepIdx;
+                            const isCurrent = s.id === step;
+                            return (
+                                <React.Fragment key={s.id}>
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${isPast || isCurrent ? 'bg-grinta-accent text-black' : 'bg-white/5 text-grinta-text-secondary border border-white/10'}`}>
+                                            {isPast ? <CheckCircle2 size={20} /> : idx + 1}
+                                        </div>
+                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isCurrent ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-50'}`}>
+                                            {s.label}
+                                        </span>
+                                    </div>
+                                    {idx < 2 && (
+                                        <div className={`w-20 h-[2px] mb-6 transition-colors duration-500 ${isPast ? 'bg-grinta-accent' : 'bg-white/5'}`}></div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <AnimatePresence mode="wait">
+                {step === 'connect' && (
+                    <motion.div
+                        key="connect"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="flex flex-col items-center justify-center space-y-8 text-center py-12"
+                    >
+                        <div className="w-24 h-24 rounded-3xl bg-grinta-accent/20 flex items-center justify-center text-grinta-accent shadow-[0_0_50px_rgba(74,222,128,0.2)]">
+                            <Wallet size={48} />
+                        </div>
+                        <div className="space-y-4">
+                            <h1 className="text-4xl font-extrabold font-syncopate uppercase tracking-tighter">Bienvenido a Grinta</h1>
+                            <p className="text-grinta-text-secondary text-lg max-w-md">Conecta tu billetera para comenzar el viaje hacia el rendimiento agéntico en Bitcoin.</p>
+                        </div>
+                        <button
+                            onClick={handleConnect}
+                            disabled={isProcessing}
+                            className="px-12 py-4 bg-grinta-accent text-black font-bold rounded-2xl flex items-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.3)] disabled:opacity-50"
+                        >
+                            {isProcessing ? <Loader2 className="animate-spin" /> : <PlusCircle size={20} />}
+                            {isProcessing ? 'Conectando...' : 'CONECTAR METAMASK'}
+                        </button>
+                    </motion.div>
+                )}
+
+                {step === 'deposit' && (
+                    <motion.div
+                        key="deposit"
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        className="w-full max-w-xl mx-auto space-y-8"
+                    >
+                        <div className="bg-grinta-card border border-grinta-card-border p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-grinta-accent/5 filter blur-3xl pointer-events-none"></div>
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                    <Bitcoin size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold font-syncopate uppercase tracking-widest text-white">Fondear Grinta</h2>
+                                    <p className="text-xs text-grinta-text-secondary">Depósito L1 Mainnet → L2 Rollup</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-[10px] font-bold text-grinta-text-secondary uppercase mb-2 block">Balance L1 Disponible</label>
+                                    <div className="text-2xl font-bold text-white">{balanceL1.toFixed(2)} BTC</div>
+                                </div>
+
+                                <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
+                                    <label className="text-[10px] font-bold text-grinta-text-secondary uppercase block">Monto a Depositar</label>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            type="number"
+                                            value={depositAmount}
+                                            onChange={(e) => setDepositAmount(e.target.value)}
+                                            className="bg-transparent text-4xl font-bold text-white border-none outline-none w-full"
+                                        />
+                                        <span className="text-xl font-bold text-orange-500">BTC</span>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Red Destino</span>
+                                        <span className="text-xs font-bold text-grinta-accent">Grinta L2</span>
+                                    </div>
+                                    <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                        <span className="text-[9px] text-grinta-text-secondary uppercase block mb-1">Costo Estimado</span>
+                                        <span className="text-xs font-bold text-white">$1.24 USD</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleDeposit}
+                                    disabled={isProcessing}
+                                    className="w-full py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)] disabled:opacity-50"
+                                >
+                                    {isProcessing ? <Loader2 className="animate-spin" /> : <Download size={20} />}
+                                    {isProcessing ? 'PROCESANDO DEPÓSITO...' : 'CONFIRMAR DEPÓSITO'}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {step === 'create_vault' && (
+                    <motion.div
+                        key="create_vault"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full space-y-8"
+                    >
+                        <div className="flex justify-between items-end mb-4 px-4">
+                            <div>
+                                <h2 className="text-3xl font-bold font-syncopate uppercase tracking-tighter text-white">Nuevo Vault</h2>
+                                <p className="text-grinta-text-secondary">Selección de Estrategia Agéntica</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[10px] text-grinta-text-secondary uppercase font-bold mb-1">Balance L2</div>
+                                <div className="text-2xl font-bold text-grinta-accent">{balanceL2} BTC</div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Active Strategy */}
+                            <div
+                                className={`p-8 rounded-[2rem] border-2 transition-all duration-300 cursor-pointer relative overflow-hidden group shadow-lg ${selectedStrategy === 'Yield Grinta' ? 'border-grinta-accent bg-grinta-accent/5 ring-4 ring-grinta-accent/10' : 'border-white/5 bg-grinta-card hover:border-white/20'}`}
+                                onClick={() => setSelectedStrategy('Yield Grinta')}
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-grinta-accent/5 filter blur-3xl group-hover:bg-grinta-accent/10 transition-colors pointer-events-none"></div>
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={`p-3 rounded-2xl transition-colors ${selectedStrategy === 'Yield Grinta' ? 'bg-grinta-accent text-black shadow-[0_0_20px_rgba(74,222,128,0.4)]' : 'bg-white/5 text-grinta-text-secondary'}`}>
+                                        <TrendingUp size={24} />
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[9px] font-bold text-grinta-text-secondary uppercase tracking-widest block opacity-70">APY Estimado</span>
+                                        <span className="text-2xl font-bold text-grinta-accent">12.5%</span>
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2 font-syncopate tracking-tight">Yield Grinta</h3>
+                                <p className="text-xs text-grinta-text-secondary leading-relaxed mb-4">Agents automatizados ejecutan Flash-Mints d arbitrage en múltiples L2s.</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="px-3 py-1 rounded-full bg-grinta-accent/20 text-grinta-accent text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-grinta-accent animate-pulse"></div>
+                                        RECOMENDADO
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Inactive Strategy */}
+                            <div
+                                className="p-8 rounded-[2rem] border-2 border-white/5 bg-grinta-card opacity-40 cursor-not-allowed grayscale relative overflow-hidden"
+                            >
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="p-3 rounded-2xl bg-white/5 text-grinta-text-secondary">
+                                        <Zap size={24} />
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[9px] font-bold text-grinta-text-secondary uppercase tracking-widest block">APY Esperado</span>
+                                        <span className="text-2xl font-bold text-grinta-text-secondary">4.2%</span>
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2 font-syncopate tracking-tight">Staking Pasivo</h3>
+                                <p className="text-xs text-grinta-text-secondary leading-relaxed">Colocación en pools balanceadas con riesgo mínimo. (Próximamente)</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-grinta-card border border-white/5 p-6 rounded-2xl flex flex-col items-center">
+                            <div className="w-full flex justify-between mb-4 px-2">
+                                <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">Asignación Total</span>
+                                <span className="text-xs font-bold text-white">100% Capital</span>
+                            </div>
+                            <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5 mb-8">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: '100%' }}
+                                    transition={{ duration: 1, ease: 'easeOut' }}
+                                    className="h-full bg-grinta-accent"
+                                />
+                            </div>
+                            <button
+                                onClick={handleCreateVault}
+                                disabled={isProcessing}
+                                className="w-full max-w-sm py-5 bg-grinta-accent text-black font-bold rounded-2xl flex items-center justify-center gap-3 hover:brightness-110 transition-all shadow-[0_0_30px_rgba(74,222,128,0.2)]"
+                            >
+                                {isProcessing ? <Loader2 className="animate-spin" /> : <Activity size={20} />}
+                                {isProcessing ? 'DESPLEGANDO VAULT...' : 'CREAR VAULT Y GENERAR YIELD'}
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {step === 'vault_view' && activeVault && (
+                    <motion.div
+                        key="vault_view"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
+                    >
+                        {/* Left Content Area (2 columns) */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Stats Summary Area */}
+                            <div className="bg-grinta-card border border-grinta-card-border p-8 rounded-[2rem] shadow-xl relative overflow-hidden flex justify-between items-center group">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-grinta-accent/5 filter blur-3xl pointer-events-none"></div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-2 block">Valor Total del Vault</span>
+                                    <div className="text-5xl font-bold text-white mb-2 flex items-baseline gap-3">
+                                        {(activeVault.amount + activeVault.yieldEarned).toFixed(6)}
+                                        <span className="text-grinta-accent text-xl">BTC</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs font-bold text-grinta-accent">
+                                        <TrendingUp size={14} />
+                                        <span>+{(activeVault.yieldEarned).toFixed(6)} BTC ganados</span>
+                                    </div>
+                                </div>
+                                <div className="bg-black/40 border border-white/5 p-6 rounded-2xl text-right min-w-[150px]">
+                                    <span className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-1 block">APY ACTUAL</span>
+                                    <div className="text-3xl font-bold text-grinta-accent">{activeVault.apy}%</div>
+                                    <div className="flex items-center justify-end gap-1.5 text-[9px] text-grinta-text-secondary mt-1">
+                                        <Activity size={10} className="text-grinta-accent animate-pulse" />
+                                        Actualizado en tiempo real
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Live Agentic Activity Card */}
+                            <div className="bg-grinta-card border border-grinta-card-border p-8 rounded-[2rem] shadow-xl space-y-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-grinta-accent/20 text-grinta-accent">
+                                        <Bot size={20} className="" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white font-syncopate uppercase tracking-widest">Actividad Agéntica en Vivo</h3>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-6">
+                                    <div className="bg-black/40 border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                                                <Zap size={16} />
+                                            </div>
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Métricas</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white mb-1">{activeVault.flashMints}</div>
+                                        <div className="text-[9px] font-bold text-grinta-text-secondary uppercase">Flash-Mints Ejecutados</div>
+                                    </div>
+
+                                    <div className="bg-black/40 border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                                                <Activity size={16} />
+                                            </div>
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Métricas</span>
+                                        </div>
+                                        <div className="text-2xl font-bold text-white mb-1">{activeVault.agentActions}</div>
+                                        <div className="text-[9px] font-bold text-grinta-text-secondary uppercase">Oportunidades de Arbitraje</div>
+                                    </div>
+
+                                    <div className="bg-black/40 border border-white/5 p-5 rounded-2xl relative overflow-hidden group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="p-2 rounded-lg bg-grinta-accent/10 text-grinta-accent">
+                                                <ShieldCheck size={16} />
+                                            </div>
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase opacity-60">Estado</span>
+                                        </div>
+                                        <div className="text-lg font-bold text-grinta-accent mb-1">Colateralizado</div>
+                                        <div className="text-[9px] font-bold text-grinta-text-secondary uppercase">Ratio: 100.00%</div>
+                                    </div>
+                                </div>
+
+                                {/* Capital Flow Visualization */}
+                                <div className="bg-black/20 border border-white/5 rounded-3xl p-10 relative">
+                                    <div className="flex justify-between items-center relative z-10">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-lg">
+                                                <Bitcoin size={28} />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-grinta-text-secondary uppercase">Tu Vault</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-3 relative">
+                                            <div className="w-16 h-16 rounded-full bg-grinta-accent/10 border border-grinta-accent/30 flex items-center justify-center text-grinta-accent shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                                                <Bot size={32} />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-grinta-accent uppercase">Agentes Grinta</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="w-14 h-14 rounded-2xl bg-grinta-accent/10 border border-grinta-accent/20 flex items-center justify-center text-grinta-accent opacity-60">
+                                                <TrendingUp size={28} />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-grinta-text-secondary uppercase">Mercado L2</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Connection Line */}
+                                    <div className="absolute top-1/2 left-24 right-24 h-[1px] bg-white/10 -translate-y-6">
+                                        <motion.div
+                                            className="absolute top-0 w-2 h-2 rounded-full bg-grinta-accent"
+                                            animate={{ x: [0, 280] }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                        />
+                                        <motion.div
+                                            className="absolute top-0 w-2 h-2 rounded-full bg-blue-400"
+                                            animate={{ x: [280, 560] }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1 }}
+                                        />
+                                    </div>
+
+                                    <p className="text-[9px] text-grinta-text-secondary text-center mt-12 opacity-60">
+                                        Los agentes utilizan tu liquidez para ejecutar Flash-Mints y arbitraje, retornando las ganancias al Vault.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Content Area (1 column) */}
+                        <div className="lg:col-span-1 space-y-6">
+                            {/* Vault Details Card */}
+                            <div className="bg-grinta-card border border-grinta-card-border p-6 rounded-[2rem] shadow-xl">
+                                <h3 className="text-[11px] font-bold text-white font-syncopate uppercase tracking-widest mb-6">Detalles del Vault</h3>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">ID</span>
+                                        <span className="text-[10px] text-white/70 font-mono">{activeVault.id}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Estrategia</span>
+                                        <span className="text-[10px] text-grinta-accent font-bold">Yield Grinta (Agentic)</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Depósito Inicial</span>
+                                        <span className="text-[10px] text-white font-bold">{activeVault.amount} BTC</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3">
+                                        <span className="text-[10px] text-grinta-text-secondary uppercase font-bold">Estado</span>
+                                        <div className="px-2 py-1 rounded-md bg-grinta-accent/20 text-grinta-accent text-[9px] font-bold uppercase tracking-wider">Activo</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Operation Log Card */}
+                            <div className="bg-grinta-card border border-grinta-card-border p-6 rounded-[2rem] shadow-xl flex flex-col min-h-[400px]">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <Clock size={16} className="text-grinta-text-secondary" />
+                                    <h3 className="text-[11px] font-bold text-white font-syncopate uppercase tracking-widest text-grinta-text-secondary">Log de Operaciones</h3>
+                                </div>
+
+                                <div className="flex-1 space-y-3 overflow-y-auto max-h-[350px] custom-scrollbar pr-2">
+                                    {activeVault.logs.slice().reverse().map((log, idx) => (
+                                        <motion.div
+                                            key={log.id}
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="bg-black/30 p-4 rounded-2xl border border-white/5 relative overflow-hidden group"
+                                        >
+                                            <div className="flex justify-between items-center mb-1 relative z-10">
+                                                <span className={`text-[10px] font-bold uppercase tracking-wider ${log.type === 'agent' ? 'text-grinta-accent' : 'text-blue-400'}`}>
+                                                    {log.message.includes('Arbitraje') ? 'Arbitraje Exitoso' : log.message.includes('Flash-Mint') ? 'Flash-Mint Ejecutado' : 'Vault Creado'}
+                                                </span>
+                                                <span className="text-[9px] text-grinta-text-secondary opacity-50">
+                                                    {idx === 0 && log.type === 'agent' ? 'Hace instantes' : idx === 1 && log.type === 'agent' ? 'Reciente' : 'Inicio'}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-grinta-text-secondary leading-tight mt-1 relative z-10">
+                                                {log.message}
+                                            </p>
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                                {activeVault.logs.length >= 3 && (
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        onClick={() => setStep('main_dashboard')}
+                                        className="mt-6 w-full py-4 bg-white/5 border border-white/10 text-white rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all group"
+                                    >
+                                        <LayoutDashboard size={18} className="text-grinta-accent group-hover:scale-110 transition-transform" />
+                                        <span className="text-xs font-bold font-syncopate uppercase tracking-tighter">Ir al Dashboard Principal</span>
+                                    </motion.button>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+// Sub-components as needed or icons
+function Bot({ size, className = "" }: { size: number, className?: string }) {
+    return (
+        <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <circle cx="12" cy="5" r="2" />
+            <path d="M12 7v4" />
+            <line x1="8" y1="16" x2="8" y2="16" />
+            <line x1="16" y1="16" x2="16" y2="16" />
+        </svg>
+    )
+}
+
+function LayoutDashboard({ size, className = "" }: { size: number, className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" />
+        </svg>
+    );
+}
