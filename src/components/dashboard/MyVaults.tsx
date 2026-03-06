@@ -1,6 +1,6 @@
 import React from 'react';
 import { useVaults } from '../../context/VaultContext';
-import { Bot, Zap, TrendingUp, Clock, ChevronRight } from 'lucide-react';
+import { Bot, Zap, TrendingUp, Clock, ChevronRight, Bitcoin } from 'lucide-react';
 
 export default function MyVaults() {
     const { vaults, setStep, setActiveVaultId } = useVaults();
@@ -35,59 +35,71 @@ export default function MyVaults() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-                {vaults.map((vault) => (
-                    <button
-                        key={vault.id}
-                        onClick={() => {
-                            setActiveVaultId(vault.id);
-                            setStep('vault_view');
-                        }}
-                        className="group relative bg-grinta-card border border-grinta-card-border rounded-[24px] p-6 text-left hover:border-grinta-accent/50 transition-all overflow-hidden shadow-xl"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-grinta-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                {vaults.map((vault) => {
+                    const isManual = vault.type === 'manual';
+                    const accentColor = isManual ? '#F7931A' : '#4ADE80';
+                    const accentBg = isManual ? 'bg-[#F7931A]/10' : 'bg-grinta-accent/10';
+                    const accentText = isManual ? 'text-[#F7931A]' : 'text-grinta-accent';
+                    const borderHover = isManual ? 'hover:border-[#F7931A]/50' : 'hover:border-grinta-accent/50';
 
-                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-grinta-accent">
-                                    <Bot size={28} />
+                    return (
+                        <button
+                            key={vault.id}
+                            onClick={() => {
+                                setActiveVaultId(vault.id);
+                                setStep('vault_view');
+                            }}
+                            className={`group relative bg-grinta-card border border-grinta-card-border rounded-[24px] p-6 text-left ${borderHover} transition-all overflow-hidden shadow-xl`}
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-r ${isManual ? 'from-[#F7931A]/5' : 'from-grinta-accent/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+
+                            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center ${accentText}`}>
+                                        {isManual ? <Bitcoin size={28} /> : <Bot size={28} />}
+                                    </div>
+                                    <div>
+                                        <div className={`text-[10px] font-bold ${accentText} uppercase tracking-widest mb-1`}>Vault ID: {vault.id}</div>
+                                        <div className="text-lg font-bold text-white">{vault.strategy}</div>
+                                        <div className="text-xs text-grinta-text-secondary mt-1 flex items-center gap-3">
+                                            <span className="flex items-center gap-1"><Clock size={10} /> {new Date(vault.createdAt).toLocaleDateString()}</span>
+                                            <span className={`flex items-center gap-1 ${accentText} font-bold`}><Zap size={10} /> Yield Activo</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="text-[10px] font-bold text-grinta-accent uppercase tracking-widest mb-1">Vault ID: {vault.id}</div>
-                                    <div className="text-lg font-bold text-white">{vault.strategy}</div>
-                                    <div className="text-xs text-grinta-text-secondary mt-1 flex items-center gap-3">
-                                        <span className="flex items-center gap-1"><Clock size={10} /> {new Date(vault.createdAt).toLocaleDateString()}</span>
-                                        <span className="flex items-center gap-1 text-grinta-accent font-bold"><Zap size={10} /> Yield Activo</span>
+
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+                                    <div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Colateral</div>
+                                        <div className="text-base font-bold text-white">{vault.amount.toFixed(2)} BTC</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Yield</div>
+                                        <div className={`text-base font-bold ${accentText}`}>+{vault.yieldEarned.toFixed(6)} BTC</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Deuda</div>
+                                        <div className="text-base font-bold text-blue-400">{(vault.debt || 0).toFixed(1)} GRIT</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Flash-Mints</div>
+                                        <div className="text-base font-bold text-white">{isManual ? '0' : vault.flashMints}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{isManual ? 'Control' : 'Acciones IA'}</div>
+                                        <div className="text-base font-bold text-white">{isManual ? 'Manual' : vault.agentActions}</div>
+                                    </div>
+                                </div>
+
+                                <div className="hidden md:block">
+                                    <div className={`w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-opacity-100 transition-all ${isManual ? 'group-hover:bg-[#F7931A]' : 'group-hover:bg-grinta-accent'} group-hover:text-black`}>
+                                        <ChevronRight size={20} />
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                                <div>
-                                    <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Depósito</div>
-                                    <div className="text-base font-bold text-white">{vault.amount.toFixed(2)} BTC</div>
-                                </div>
-                                <div>
-                                    <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Yield (Total)</div>
-                                    <div className="text-base font-bold text-grinta-accent">+{vault.yieldEarned.toFixed(6)} BTC</div>
-                                </div>
-                                <div>
-                                    <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Flash-Mints</div>
-                                    <div className="text-base font-bold text-white">{vault.flashMints}</div>
-                                </div>
-                                <div>
-                                    <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Acciones Agent.</div>
-                                    <div className="text-base font-bold text-white">{vault.agentActions}</div>
-                                </div>
-                            </div>
-
-                            <div className="hidden md:block">
-                                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-grinta-accent group-hover:text-black transition-all">
-                                    <ChevronRight size={20} />
-                                </div>
-                            </div>
-                        </div>
-                    </button>
-                ))}
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );

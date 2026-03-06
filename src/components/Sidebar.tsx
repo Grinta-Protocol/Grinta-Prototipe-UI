@@ -1,11 +1,28 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Bot, BarChart3, Wallet, Send, Twitter, Disc, PlusCircle, Folder, Globe, Activity } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, Globe, Activity, Bot } from 'lucide-react';
 import { useVaults } from '../context/VaultContext';
 
 export default function Sidebar() {
   const location = useLocation();
-  const { setStep, startNewFlow, balanceL2, vaults } = useVaults();
+  const { step, setStep, startNewFlow, balanceL2, vaults } = useVaults();
+
+  const isFlowActive = ['connect', 'deposit', 'create_vault'].includes(step);
+
+  const handleNavigation = (e: React.MouseEvent, path: string) => {
+    if (step === 'vault_view') {
+      setStep('main_dashboard');
+      return;
+    }
+
+    if (isFlowActive) {
+      if (!window.confirm('¿Quieres salir? Se cancelará el progreso de creación del vault.')) {
+        e.preventDefault();
+        return;
+      }
+      setStep('main_dashboard');
+    }
+  };
 
   const menuItems = [
     { name: 'Dashboard', icon: BarChart3, path: '/app' },
@@ -22,8 +39,12 @@ export default function Sidebar() {
     <aside className="w-64 h-screen bg-[#050708] border-r border-white/5 flex flex-col justify-between fixed left-0 top-0 z-20 overflow-y-auto">
       <div>
         {/* Logo */}
-        <Link to="/" className="p-8 flex items-center hover:opacity-80 transition-opacity">
-          <span className="text-2xl font-extrabold tracking-tighter uppercase font-syncopate">Grinta</span>
+        <Link
+          to="/"
+          onClick={(e) => handleNavigation(e, '/')}
+          className="p-8 flex items-center hover:opacity-80 transition-opacity"
+        >
+          <span className="text-2xl font-extrabold tracking-tighter uppercase font-syncopate text-white">Grinta</span>
         </Link>
 
         {/* Navigation */}
@@ -38,6 +59,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={(e) => handleNavigation(e, item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
                   ? 'bg-white/5 text-white'
                   : 'text-grinta-text-secondary hover:bg-white/5 hover:text-white'
@@ -60,6 +82,7 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   to={item.path}
+                  onClick={(e) => handleNavigation(e, item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
                     ? 'bg-grinta-accent/10 text-grinta-accent border border-grinta-accent/20'
                     : 'text-grinta-text-secondary hover:bg-white/5 hover:text-white'
@@ -109,7 +132,7 @@ export default function Sidebar() {
             <span className="text-xs font-bold text-white uppercase tracking-wider">Feedback</span>
           </div>
           <p className="text-[11px] text-grinta-text-secondary leading-tight">
-            Share your thoughts on X and help us improve the protocol.
+            Comparte tu feedback en X para mejorar el protocolo.
           </p>
         </a>
 
@@ -120,12 +143,12 @@ export default function Sidebar() {
             <span className="text-xs font-bold text-grinta-accent uppercase tracking-wider">Support us</span>
           </div>
           <p className="text-[10px] text-grinta-text-secondary leading-tight mb-3">
-            Donate to help the development of Grinta Protocol.
+            Dona para apoyar el desarrollo de Grinta Protocol.
           </p>
           <button
             onClick={() => {
               navigator.clipboard.writeText('0x040033d6A1F5E78a127898fB39F9B583a2D904B7275D4be21663Eca8Fa915951');
-              alert('Address copied to clipboard!');
+              alert('Address copiada al portapapeles!');
             }}
             className="w-full py-2 bg-grinta-accent/10 border border-grinta-accent/20 rounded-lg text-[10px] font-bold text-grinta-accent hover:bg-grinta-accent/20 transition-colors uppercase"
           >

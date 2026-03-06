@@ -13,8 +13,10 @@ interface Vault {
     id: string;
     amount: number;
     strategy: string;
+    type: 'agentic' | 'manual';
     apy: number;
     yieldEarned: number;
+    debt: number; // Added debt field
     flashMints: number;
     agentActions: number;
     logs: LogEntry[];
@@ -43,6 +45,10 @@ interface VaultContextType {
     setActiveVaultId: (id: string | null) => void;
     addVault: (vault: Vault) => void;
     updateVault: (id: string, updates: Partial<Vault>) => void;
+    depositToVault: (id: string, amount: number) => void;
+    withdrawFromVault: (id: string, amount: number) => void;
+    borrowGrit: (id: string, amount: number) => void;
+    repayGrit: (id: string, amount: number) => void;
     startNewFlow: () => void;
     market: MarketState;
 }
@@ -100,9 +106,12 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
                 arbitrageVol: newArbitrageVol
             });
 
-            // 6. Update Vaults Yield and Activity
+            // 6. Update Vaults Yield and Activity (ONLY for Agentic)
             setVaults(prevVaults => prevVaults.map(vault => {
-                const yieldIncrement = vault.amount * 0.00005;
+                // If vault is manual (Staking Pasivo), we don't add yield or logs automatically
+                if (vault.type === 'manual') return vault;
+
+                const yieldIncrement = (vault.amount * (vault.apy / 100)) / (365 * 24 * 60 * 20); // Accurate yield per 3s
                 const newYield = vault.yieldEarned + yieldIncrement;
 
                 let newAgentActions = vault.agentActions;
@@ -156,13 +165,73 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         setVaults(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
     };
 
+    const depositToVault = (id: string, amount: number) => {
+        setVaults(prev => prev.map(v => {
+            if (v.id === id) {
+                const newLogs = [...v.logs, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `Depósito Manual: ${amount} WBTC a colateral`,
+                    timestamp: new Date(),
+                    type: 'info'
+                } as LogEntry];
+                return { ...v, amount: v.amount + amount, logs: newLogs.slice(-20) };
+            }
+            return v;
+        }));
+    };
+
+    const withdrawFromVault = (id: string, amount: number) => {
+        setVaults(prev => prev.map(v => {
+            if (v.id === id) {
+                const newLogs = [...v.logs, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `Retiro Manual: ${amount} WBTC de colateral`,
+                    timestamp: new Date(),
+                    type: 'info'
+                } as LogEntry];
+                return { ...v, amount: Math.max(0, v.amount - amount), logs: newLogs.slice(-20) };
+            }
+            return v;
+        }));
+    };
+
+    const borrowGrit = (id: string, amount: number) => {
+        setVaults(prev => prev.map(v => {
+            if (v.id === id) {
+                const newLogs = [...v.logs, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `Generación de Deuda: +${amount} GRIT`,
+                    timestamp: new Date(),
+                    type: 'info'
+                } as LogEntry];
+                return { ...v, debt: (v.debt || 0) + amount, logs: newLogs.slice(-20) };
+            }
+            return v;
+        }));
+    };
+
+    const repayGrit = (id: string, amount: number) => {
+        setVaults(prev => prev.map(v => {
+            if (v.id === id) {
+                const newLogs = [...v.logs, {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `Pago de Deuda: -${amount} GRIT`,
+                    timestamp: new Date(),
+                    type: 'info'
+                } as LogEntry];
+                return { ...v, debt: Math.max(0, (v.debt || 0) - amount), logs: newLogs.slice(-20) };
+            }
+            return v;
+        }));
+    };
+
     const startNewFlow = () => {
         setStep('deposit');
     };
 
     return (
         <VaultContext.Provider value={{
-            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, startNewFlow, market
+            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, depositToVault, withdrawFromVault, borrowGrit, repayGrit, startNewFlow, market
         }}>
             {children}
         </VaultContext.Provider>
@@ -174,3 +243,4 @@ export const useVaults = () => {
     if (!context) throw new Error('useVaults must be used within a VaultProvider');
     return context;
 }
+
