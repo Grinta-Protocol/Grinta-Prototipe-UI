@@ -685,7 +685,7 @@ export default function Landing() {
           <div className="text-center mb-16 max-w-4xl">
             <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Syncopate' }}>Deployed Contracts and Discovery</h2>
             <p className="text-lg text-gray-400 leading-relaxed">
-              Our base infrastructure is already operational on the Starknet network (Testnet) with 6 fundamental smart contracts.
+              Our base infrastructure is already operational on the Starknet network (Testnet) with 7 fundamental smart contracts.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-6xl">
