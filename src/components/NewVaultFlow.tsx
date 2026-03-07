@@ -8,7 +8,7 @@ import { getSafeEngine, parseBtcAmount, parseGritAmount, btcToWad, formatBtcAmou
 import { useWbtcBalance } from '../hooks/useGrinta';
 
 export default function NewVaultFlow() {
-    const { step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, addVault, setActiveVaultId, activeVaultId } = useVaults();
+    const { step, setStep, vaults, addVault, setActiveVaultId, activeVaultId, depositToVault, withdrawFromVault, borrowGrit, repayGrit } = useVaults();
     const [isProcessing, setIsProcessing] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
     const [selectedStrategy, setSelectedStrategy] = useState<'agentic' | 'manual'>('agentic');
@@ -216,10 +216,21 @@ export default function NewVaultFlow() {
                 ];
             }
 
-            await sendAsync(calls);
-            setActionTxStatus(`${action} transaction sent!`);
+            const tx = await sendAsync(calls);
+            setActionTxStatus(`✓ ${action === 'deposit' ? 'Depósito' : action === 'withdraw' ? 'Retiro' : action === 'borrow' ? 'Préstamo' : 'Pago'} enviado exitosamente`);
+
+            // Real-time local state update
+            const numVal = parseFloat(actionAmount);
+            if (activeVaultId) {
+                if (action === 'deposit') depositToVault(activeVaultId, numVal);
+                else if (action === 'withdraw') withdrawFromVault(activeVaultId, numVal);
+                else if (action === 'borrow') borrowGrit(activeVaultId, numVal);
+                else if (action === 'repay') repayGrit(activeVaultId, numVal);
+            }
+
             setActionAmount('');
-            refetchBalance();
+            // Refresh balance from contract after a delay
+            setTimeout(() => refetchBalance(), 4000);
         } catch (err) {
             console.error(`${action} failed:`, err);
             setActionTxStatus(`Error: ${(err as Error).message}`);
@@ -732,171 +743,152 @@ export default function NewVaultFlow() {
 
                                         {/* Action Buttons Grid */}
                                         <div className="md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                            <button
-                                                onClick={() => handleVaultAction('deposit')}
-                                                disabled={isPending}
-                                                className="flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-grinta-accent/50 hover:bg-grinta-accent/5 transition-all group"
-                                            >
-                                                <Download size={20} className="text-grinta-accent group-hover:scale-110 transition-transform" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Deposit WBTC</span>
-                                            </button>
+                                            {/* Withdraw - Emphasized if no balance for deposit */}
                                             <button
                                                 onClick={() => handleVaultAction('withdraw')}
                                                 disabled={activeVault.amount === 0 || isPending}
-                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-red-500/50 hover:bg-red-500/5'}`}
+                                                className={`relative flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent/50 hover:bg-grinta-accent/5'}`}
                                             >
-                                                <RefreshCcw size={20} className="text-red-500 group-hover:rotate-180 transition-transform duration-500" />
+                                                <RefreshCcw size={20} className="text-white group-hover:rotate-180 transition-transform duration-500" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-white">Withdraw WBTC</span>
+                                                {activeVault.amount > 0 && (
+                                                    <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                                                )}
                                             </button>
+
+                                            {/* Borrow - Yield Generator */}
                                             <button
                                                 onClick={() => handleVaultAction('borrow')}
                                                 disabled={activeVault.amount === 0 || isPending}
-                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/5'}`}
+                                                className={`relative flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent/50 hover:bg-grinta-accent/5'}`}
                                             >
-                                                <Layers size={20} className="text-orange-500 group-hover:translate-x-1 transition-transform" />
+                                                <Layers size={20} className="text-grinta-accent group-hover:translate-x-1 transition-transform" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-white">Borrow GRIT</span>
+                                                {activeVault.amount > 0 && (
+                                                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-grinta-accent/20 border border-grinta-accent/30 flex items-center gap-1 group-hover:scale-110 transition-transform">
+                                                        <TrendingUp size={8} className="text-grinta-accent" />
+                                                        <span className="text-[7px] font-black text-grinta-accent uppercase">Yield x2</span>
+                                                    </div>
+                                                )}
                                             </button>
+
+                                            {/* Deposit - Secondary if no balance */}
+                                            <button
+                                                onClick={() => handleVaultAction('deposit')}
+                                                disabled={isPending || wbtcBalance === 0n}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${wbtcBalance === 0n ? 'bg-white/2 opacity-40 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent'}`}
+                                            >
+                                                <Download size={20} className="text-grinta-text-secondary group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-grinta-text-secondary">Deposit WBTC</span>
+                                            </button>
+
+                                            {/* Repay */}
                                             <button
                                                 onClick={() => handleVaultAction('repay')}
                                                 disabled={activeVault.debt === 0 || isPending}
-                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.debt === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5'}`}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.debt === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5'}`}
                                             >
-                                                <Zap size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                                                <Zap size={20} className="text-white group-hover:scale-110 transition-transform" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-white">Repay GRIT</span>
                                             </button>
                                         </div>
                                     </div>
 
+                                    {/* Faucet when no WBTC balance */}
+                                    {wbtcBalance === 0n && (
+                                        <div className="mt-6 p-5 rounded-2xl bg-[#F7931A]/5 border border-[#F7931A]/20 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <Bitcoin size={18} className="text-[#F7931A]" />
+                                                <span className="text-xs font-bold text-[#F7931A]">Sin WBTC disponible — mintea tokens de prueba para depositar más</span>
+                                            </div>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!address || isPending) return;
+                                                    setActionTxStatus('Minting 1 WBTC...');
+                                                    try {
+                                                        const amt = 100_000_000n;
+                                                        await sendAsync([{
+                                                            contractAddress: config.wbtcAddress,
+                                                            entrypoint: 'mint',
+                                                            calldata: [address, `0x${amt.toString(16)}`, '0x0']
+                                                        }]);
+                                                        setActionTxStatus('Mint exitoso! +1 WBTC');
+                                                        setTimeout(() => refetchBalance(), 2000);
+                                                    } catch (e) {
+                                                        setActionTxStatus(`Error: ${(e as Error).message}`);
+                                                    }
+                                                }}
+                                                disabled={isPending}
+                                                className="px-5 py-2.5 rounded-xl bg-[#F7931A] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all whitespace-nowrap disabled:opacity-50"
+                                            >
+                                                Mintear 1 WBTC
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {actionTxStatus && (
-                                        <div className="mt-6 p-4 rounded-2xl bg-grinta-accent/5 border border-grinta-accent/10 text-[10px] font-bold text-grinta-accent uppercase tracking-[0.2em] text-center animate-pulse">
+                                        <div className={`mt-6 p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-[0.2em] text-center animate-pulse ${actionTxStatus.includes('Error') ? 'bg-red-500/5 border-red-500/10 text-red-500' : 'bg-grinta-accent/5 border-grinta-accent/10 text-grinta-accent'}`}>
                                             {actionTxStatus}
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 min-h-[400px]">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
-                                            <Activity size={18} className="text-grinta-accent" /> Log Operacional del Vault
-                                        </h3>
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-grinta-accent animate-pulse"></div>
-                                                <span className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest">Conexión Segura</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {activeVault.logs.map((log) => (
-                                            <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-all group">
-                                                <div className="text-[10px] font-mono text-white/20 pt-1">{log.timestamp.toLocaleTimeString()}</div>
-                                                <div className="flex-1">
-                                                    <div className={`text-xs font-bold leading-relaxed ${log.type === 'agent' ? 'text-grinta-accent' : log.type === 'success' ? 'text-green-500' : 'text-grinta-text-secondary'}`}>
-                                                        {log.message}
-                                                    </div>
-                                                </div>
-                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <ShieldCheck size={14} className="text-grinta-accent" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+
                             </div>
 
-                            {/* Right Column: Dynamic Activity Area */}
-                            <div className="md:col-span-4 space-y-6">
-                                {activeVault.type === 'agentic' ? (
-                                    <div className="bg-grinta-accent/5 border border-grinta-accent/10 rounded-[32px] p-8 relative overflow-hidden h-full">
-                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-                                            <Bot size={180} className="text-grinta-accent" />
+                            <div className="md:col-span-4 self-start h-full">
+                                {/* Consolidated Operational Log Card */}
+                                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 min-h-[600px] flex flex-col h-full sticky top-8">
+                                    <div className="flex items-center justify-between mb-8 shrink-0">
+                                        <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
+                                            <Activity size={18} className="text-grinta-accent" /> Actividad del Vault
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full animate-pulse ${activeVault.type === 'agentic' ? 'bg-grinta-accent shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]'}`}></div>
+                                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
+                                                {activeVault.type === 'agentic' ? 'AGENTE ONLINE' : 'MANUAL'}
+                                            </span>
                                         </div>
+                                    </div>
 
-                                        <div className="relative">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-grinta-accent/10 border border-grinta-accent/20 text-grinta-accent text-[9px] font-black uppercase tracking-widest mb-6">
-                                                Agente Autónomo Activo
-                                            </div>
-
-                                            <h3 className="text-2xl font-black text-white mb-6 font-syncopate uppercase leading-tight">Gestión Agéntica Grinta</h3>
-
-                                            <div className="space-y-6">
-                                                {[
-                                                    { label: 'Arbitrajes Ejecutados', val: activeVault.agentActions, icon: RefreshCcw },
-                                                    { label: 'Flash-Mints Realizados', val: activeVault.flashMints, icon: Zap },
-                                                    { label: 'Uptime de Estrategia', val: '99.98%', icon: Clock },
-                                                ].map((metric, idx) => (
-                                                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="p-2 rounded-xl bg-grinta-accent/10 text-grinta-accent">
-                                                                <metric.icon size={16} />
-                                                            </div>
-                                                            <span className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest">{metric.label}</span>
+                                    <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[700px]">
+                                        {activeVault.logs.length > 0 ? (
+                                            activeVault.logs.slice().reverse().map((log) => (
+                                                <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-all group">
+                                                    <div className="text-[9px] font-mono text-white/20 pt-1 shrink-0">{log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                    <div className="flex-1">
+                                                        <div className={`text-[11px] font-bold leading-relaxed ${log.type === 'agent' ? 'text-grinta-accent' : log.type === 'success' ? 'text-green-500' : 'text-grinta-text-secondary'}`}>
+                                                            {log.message}
                                                         </div>
-                                                        <span className="text-sm font-black text-white font-syncopate">{metric.val}</span>
                                                     </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-20 text-center opacity-20 h-full">
+                                                <Activity size={40} className="mb-4" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Esperando transacciones...</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {activeVault.type === 'agentic' && (
+                                        <div className="mt-8 pt-6 border-t border-white/5 text-center shrink-0">
+                                            <div className="flex justify-center gap-1 mb-3">
+                                                {Array(20).fill(0).map((_, i) => (
+                                                    <motion.div
+                                                        key={i}
+                                                        animate={{ height: [4, 12, 6, 16, 4] }}
+                                                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.08 }}
+                                                        className="w-1 h-3 bg-grinta-accent/30 rounded-full"
+                                                    />
                                                 ))}
                                             </div>
-
-                                            <div className="mt-10 p-6 rounded-3xl bg-black/60 border border-white/10 text-center">
-                                                <div className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-4">Estado del Nodo Grinta</div>
-                                                <div className="flex justify-center gap-1 mb-4">
-                                                    {Array(12).fill(0).map((_, i) => (
-                                                        <motion.div
-                                                            key={i}
-                                                            animate={{ height: [8, 16, 12, 20, 10] }}
-                                                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }}
-                                                            className="w-1.5 h-4 bg-grinta-accent/40 rounded-full"
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <p className="text-[10px] text-grinta-text-secondary font-medium leading-relaxed italic">
-                                                    "Escaneando liquidez en Ekubo y Nostra para oportunidades de arbitraje..."
-                                                </p>
-                                            </div>
+                                            <p className="text-[9px] text-grinta-text-secondary font-black tracking-[0.2em] uppercase">
+                                                AGENTE ACTIVO: MONITOREANDO LIQUIDEZ EKUBO
+                                            </p>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="bg-orange-500/5 border border-orange-500/10 rounded-[32px] p-8 relative overflow-hidden h-full">
-                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-                                            <User size={180} className="text-orange-500" />
-                                        </div>
-
-                                        <div className="relative">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[9px] font-black uppercase tracking-widest mb-6">
-                                                Gestión Manual de Usuario
-                                            </div>
-
-                                            <h3 className="text-2xl font-black text-white mb-6 font-syncopate uppercase leading-tight">Staking Pasivo Grinta</h3>
-
-                                            <div className="space-y-4 mb-8">
-                                                <p className="text-xs text-grinta-text-secondary leading-relaxed">
-                                                    Esta modalidad te permite gestionar manualmente tu colateral. No se ejecutan acciones automáticas.
-                                                </p>
-                                                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2">
-                                                    <div className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Ventajas</div>
-                                                    <ul className="text-[10px] text-grinta-text-secondary space-y-1">
-                                                        <li className="flex items-center gap-2">• Cero comisiones de gestión</li>
-                                                        <li className="flex items-center gap-2">• Control total de retiros L1</li>
-                                                        <li className="flex items-center gap-2">• Sin riesgo de flash-mint</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-
-                                            <div className="p-6 rounded-3xl bg-black/60 border border-white/10">
-                                                <div className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-4">Sugerencia de Protocolo</div>
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 text-xs font-bold font-syncopate">12.5%</div>
-                                                    <p className="text-[10px] text-grinta-text-secondary font-medium leading-tight">
-                                                        Cambia a Yield Agéntico para un boost de +8.3% APY instantáneo.
-                                                    </p>
-                                                </div>
-                                                <button className="w-full py-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-black uppercase tracking-widest hover:bg-orange-500/20 transition-all">
-                                                    Mejorar Vault
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </motion.div>

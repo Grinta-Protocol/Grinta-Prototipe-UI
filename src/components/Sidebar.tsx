@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, Globe, Activity, Bot } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle } from 'lucide-react';
 import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 
 export default function Sidebar() {
   const location = useLocation();
   const { isConnected } = useAccount();
-  const { step, setStep, startNewFlow, balanceL2, vaults } = useVaults();
+  const { step, setStep, startNewFlow, vaults } = useVaults();
 
   const isFlowActive = ['connect', 'fund', 'deposit', 'create_vault'].includes(step);
 
@@ -29,12 +29,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: 'Dashboard', icon: BarChart3, path: '/app' },
     { name: `Mis Vaults (${vaults.length})`, icon: LayoutDashboard, path: '/app/vaults' },
-    // { name: 'Métricas de Red', icon: Globe, path: '/app/metrics' },
     { name: 'Billetera', icon: Wallet, path: '/app/wallet' },
-  ];
-
-  const isolatedItems = [
-    { name: 'Manage Safe', icon: Activity, path: '/app/manage' },
   ];
 
   return (
@@ -70,32 +65,6 @@ export default function Sidebar() {
               </Link>
             );
           })}
-
-          <div className="pt-6 pb-2 px-2">
-            <h3 className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-3 px-2">Core Protocol</h3>
-            {isolatedItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-
-              return (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={(e) => handleNavigation(e, item.path)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                    ? 'bg-grinta-accent/10 text-grinta-accent border border-grinta-accent/20'
-                    : 'text-grinta-text-secondary hover:bg-white/5 hover:text-white'
-                    }`}
-                >
-                  <Icon size={18} className={isActive ? 'text-grinta-accent' : ''} />
-                  <span className="font-medium text-sm">{item.name}</span>
-                  {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-grinta-accent animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
 
           <div className="my-6 border-t border-white/5 mx-2"></div>
 
