@@ -4,8 +4,8 @@ import { Wallet, ArrowRight, Download, PlusCircle, CheckCircle2, TrendingUp, Zap
 import { useAccount, useConnect, useSendTransaction } from '@starknet-react/core';
 import { useVaults, Step } from '../context/VaultContext';
 import { config } from '../config/contracts';
-import { getSafeEngine, parseBtcAmount, parseGritAmount, btcToWad, formatBtcAmount } from '../lib/starknet';
-import { useWbtcBalance } from '../hooks/useGrinta';
+import { getSafeEngine, parseBtcAmount, parseGritAmount, btcToWad, formatBtcAmount, formatWad } from '../lib/starknet';
+import { useWbtcBalance, useRates } from '../hooks/useGrinta';
 import WalletConnect from './WalletConnect';
 
 export default function NewVaultFlow() {
@@ -23,6 +23,34 @@ export default function NewVaultFlow() {
     const { connect, connectors } = useConnect();
     const { sendAsync, isPending } = useSendTransaction({});
     const { balance: wbtcBalance, isLoading: balanceLoading, refetch: refetchBalance } = useWbtcBalance();
+    const rates = useRates();
+
+    // Cálculo dinámico de Max Borrow según fórmula de protocolo
+    // max_prestamo = (valor_colateral / tasa_liquidacion) * RAY / precio_redencion
+    const currentVault = vaults.find(v => v.id === activeVaultId);
+    const activeVault = currentVault;
+    let maxGritBorrow = 0n;
+    let maxGritBorrowStr = "0.00";
+
+    if (currentVault && !rates.loading) {
+        try {
+            const btcRaw = parseBtcAmount(currentVault.amount.toFixed(8));
+            const priceBtc = rates.collateralPriceRaw;
+            const liqRatio = rates.liquidationRatioRaw;
+            const redPrice = rates.redemptionPriceRaw;
+
+            if (liqRatio > 0n && redPrice > 0n) {
+                const collatValueWad = (btcRaw * priceBtc) / (10n ** 8n);
+                const maxDebtWad = (collatValueWad * (10n ** 18n)) / liqRatio;
+                maxGritBorrow = (maxDebtWad * (10n ** 27n)) / redPrice;
+                // Restamos un pequeño margen para mayor seguridad en la TX
+                maxGritBorrow = (maxGritBorrow * 99n) / 100n;
+                maxGritBorrowStr = formatWad(maxGritBorrow);
+            }
+        } catch (e) {
+            console.error("Error calculating max borrow:", e);
+        }
+    }
 
     // Navigation safety: ask before leaving
     useEffect(() => {
@@ -249,7 +277,6 @@ export default function NewVaultFlow() {
         }
     };
 
-    const activeVault = vaults.find(v => v.id === activeVaultId);
     const wbtcBalanceDisplay = formatBtcAmount(wbtcBalance);
     const parsedDeposit = parseBtcAmount(depositAmount || '0');
     const depositValid = parsedDeposit > 0n && parsedDeposit <= wbtcBalance;
@@ -670,7 +697,7 @@ export default function NewVaultFlow() {
                                     {[
                                         { label: 'Valor Total Vault', val: (activeVault.amount + activeVault.yieldEarned).toFixed(4), unit: 'WBTC', sub: `≈ $${((activeVault.amount + activeVault.yieldEarned) * 70266).toLocaleString()}` },
                                         { label: 'Yield Acumulado', val: activeVault.yieldEarned.toFixed(6), unit: 'WBTC', sub: `APY: ${activeVault.apy}%`, up: true },
-                                        { label: 'Deuda Generada', val: activeVault.debt.toFixed(2), unit: 'GRIT', sub: 'LTV: 0.00%' }
+                                        { label: 'Deuda Máxima', val: parseFloat(maxGritBorrowStr).toFixed(2), unit: 'GRIT', sub: `LTV: ${((activeVault.debt / (parseFloat(maxGritBorrowStr) || 1)) * 100).toFixed(2)}%` }
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-white/5 border border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all relative group overflow-hidden">
                                             <div className="text-grinta-text-secondary text-[10px] font-black uppercase tracking-widest mb-3">{stat.label}</div>
@@ -717,8 +744,16 @@ export default function NewVaultFlow() {
                                                     className="w-full bg-black/40 border border-white/10 rounded-3xl p-6 text-3xl font-bold text-white placeholder:text-white/10 outline-none hover:border-white/20 focus:border-grinta-accent/30 transition-all pr-24"
                                                     placeholder="0.00"
                                                 />
-                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-white/20 uppercase tracking-widest">
-                                                    WBTC / GRIT
+                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                                                    <button
+                                                        onClick={() => setActionAmount(maxGritBorrowStr)}
+                                                        className="text-[10px] font-black text-grinta-accent hover:text-white transition-colors bg-grinta-accent/10 px-2 py-1 rounded-md"
+                                                    >
+                                                        MAX BORROW
+                                                    </button>
+                                                    <span className="text-sm font-black text-white/20 uppercase tracking-widest">
+                                                        WBTC / GRIT
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
