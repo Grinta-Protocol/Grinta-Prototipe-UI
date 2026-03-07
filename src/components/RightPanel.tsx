@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { DollarSign, Percent, Bitcoin, ShieldAlert, Copy, ExternalLink, Check } from 'lucide-react';
 import { useVaults } from '../context/VaultContext';
+import { useRates } from '../hooks/useGrinta';
+import { useBitcoinPrice } from '../hooks/useBitcoinPrice';
 import { config } from '../config/contracts';
 
 export default function RightPanel() {
   const [copied, setCopied] = useState(false);
   const { market } = useVaults();
+  const { redemptionPrice, redemptionRate, collateralPrice, liquidationRatio, loading } = useRates();
+  const { price: btcPrice } = useBitcoinPrice();
 
-  const gritTokenAddress = config.safeEngineAddress;
+  const gritTokenAddress = config.gritTokenAddress;
   const shortAddress = `${gritTokenAddress.slice(0, 6)}...${gritTokenAddress.slice(-4)}`;
 
   const handleCopy = () => {
@@ -15,6 +19,8 @@ export default function RightPanel() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const btcFormatted = btcPrice ? `$${btcPrice.usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '...';
 
   return (
     <div className="w-80 space-y-6 animate-in fade-in duration-1000">
@@ -68,7 +74,7 @@ export default function RightPanel() {
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">BTC Price</div>
             <div className="text-2xl font-bold text-white font-mono">
-              ${market.btcPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {btcFormatted}
             </div>
           </div>
         </div>
@@ -86,7 +92,7 @@ export default function RightPanel() {
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Rate</div>
             <div className="text-2xl font-bold text-white font-mono">
-              {market.redemptionRate > 0 ? '+' : ''}{market.redemptionRate.toFixed(4)}%
+              {loading ? '...' : redemptionRate}
             </div>
           </div>
         </div>
@@ -104,7 +110,7 @@ export default function RightPanel() {
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Price</div>
             <div className="text-2xl font-bold text-white font-mono">
-              {market.redemptionPrice.toFixed(4)} USD
+              {loading ? '...' : parseFloat(redemptionPrice.split(' ')[0] || '0').toFixed(2)}
             </div>
           </div>
         </div>
@@ -121,7 +127,7 @@ export default function RightPanel() {
           </div>
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Liquidation Ratio</div>
-            <div className="text-2xl font-bold text-white font-mono">{market.liquidationRatio.toFixed(2)}%</div>
+            <div className="text-2xl font-bold text-white font-mono">{loading ? '...' : liquidationRatio}</div>
           </div>
         </div>
       </div>

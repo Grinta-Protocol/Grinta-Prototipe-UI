@@ -1,10 +1,22 @@
 import React from 'react';
 import { useVaults } from '../../context/VaultContext';
-import { Server, Shield, Globe, Cpu, Wifi } from 'lucide-react';
+import { useRates } from '../../hooks/useGrinta';
+import { useBitcoinPrice } from '../../hooks/useBitcoinPrice';
+import { Server, Shield, Globe, Cpu, Wifi, RefreshCw, Bitcoin } from 'lucide-react';
 
 export default function NetworkMetrics() {
     const { vaults } = useVaults();
     const hasVaults = vaults.length > 0;
+    const { redemptionPrice, redemptionRate, collateralPrice, liquidationRatio, loading, refetch } = useRates();
+    const { price: btcPrice, loading: btcLoading, refetch: refetchBtc } = useBitcoinPrice();
+
+    const handleRefresh = () => {
+        refetch();
+        refetchBtc();
+    };
+
+    const btcFormatted = btcPrice ? `$${btcPrice.usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '...';
+    const btcChangeFormatted = btcPrice ? `${btcPrice.usd_24h_change >= 0 ? '+' : ''}${btcPrice.usd_24h_change.toFixed(2)}%` : '...';
 
     const agentNodes = [
         { id: 'Grinta-Agent-Node-1', region: 'USEAST', status: hasVaults ? 'Online' : 'Standby', uptime: hasVaults ? '99.99%' : '0%', load: hasVaults ? '24%' : '0%' },
@@ -15,20 +27,49 @@ export default function NetworkMetrics() {
 
     return (
         <div className="w-full space-y-8 animate-in fade-in duration-700">
-            {/* Infrastructure Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* System Status - Bitcoin Price */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-grinta-card border border-grinta-card-border rounded-[32px] p-8 shadow-xl">
                     <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <Globe size={18} className="text-grinta-accent" /> Estado del Rollup (L2)
+                        <Bitcoin size={18} className="text-[#F7931A]" /> Bitcoin Price (USD)
                     </h3>
-                    <div className="space-y-6">
-                        <InfoRow label="Tiempo de Bloque" value={hasVaults ? "0.5s" : "---"} />
-                        <InfoRow label="Costo Promedio Tx" value={hasVaults ? "$0.001" : "---"} />
-                        <InfoRow label="Finalidad L1" value={hasVaults ? "~12 min" : "---"} />
-                        <InfoRow label="Estado del Sequencer" value={hasVaults ? "Operativo" : "Inactivo"} status={hasVaults ? "success" : "warning"} />
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-grinta-text-secondary text-sm">BTC/USD</span>
+                            <span className="text-2xl font-bold text-white">{btcFormatted}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-grinta-text-secondary text-sm">24h Change</span>
+                            <span className={`font-bold ${btcPrice && btcPrice.usd_24h_change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {btcChangeFormatted}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
+                <div className="bg-grinta-card border border-grinta-card-border rounded-[32px] p-8 shadow-xl">
+                    <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <Globe size={18} className="text-grinta-accent" /> Protocol Rates
+                    </h3>
+                    <div className="space-y-4">
+                        <InfoRow label="Redemption Price" value={loading ? "..." : redemptionPrice} />
+                        <InfoRow label="Redemption Rate" value={loading ? "..." : redemptionRate} />
+                    </div>
+                </div>
+
+                <div className="bg-grinta-card border border-grinta-card-border rounded-[32px] p-8 shadow-xl">
+                    <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <Shield size={18} className="text-grinta-accent" /> Collateral Info
+                    </h3>
+                    <div className="space-y-4">
+                        <InfoRow label="Collateral Price" value={loading ? "..." : collateralPrice} />
+                        <InfoRow label="Liquidation Ratio" value={loading ? "..." : liquidationRatio} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Agent Security */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-grinta-card border border-grinta-card-border rounded-[32px] p-8 shadow-xl">
                     <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
                         <Shield size={18} className="text-grinta-accent" /> Seguridad de Agentes

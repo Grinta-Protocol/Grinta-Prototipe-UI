@@ -130,21 +130,7 @@ export default function Overview() {
                     </div>
                 </div>
 
-                <div className="flex justify-between mt-6">
-                    <div className="flex items-center gap-6">
-                        <div className="space-y-1">
-                            <span className="text-[9px] text-grinta-text-secondary uppercase block">Desviación</span>
-                            <span className="text-xs font-bold text-white font-mono">
-                                {((market.redemptionPrice - 1) * 100).toFixed(4)}%
-                            </span>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="text-[9px] text-grinta-text-secondary uppercase block">Rate (PID)</span>
-                            <span className={`text-xs font-bold font-mono ${market.redemptionRate >= 0 ? 'text-grinta-accent' : 'text-red-400'}`}>
-                                {market.redemptionRate.toFixed(4)}%
-                            </span>
-                        </div>
-                    </div>
+                <div className="flex justify-end mt-6">
                     <div className="flex items-center gap-2 text-[10px] text-grinta-text-secondary font-mono">
                         <div className={`w-2 h-2 rounded-full ${hasVaults ? 'bg-grinta-accent animate-pulse' : 'bg-red-500'}`}></div>
                         {hasVaults ? 'SISTEMA OPERATIVO' : 'STANDBY'}

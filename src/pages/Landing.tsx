@@ -64,6 +64,26 @@ const HackerText = ({ text, href = "#" }: { text: string; href?: string }) => {
   );
 };
 
+const CopyButton = ({ text, label }: { text: string; label: string }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#00FF41]/30 hover:bg-[#00FF41]/5 transition-all group"
+    >
+      <code className="text-xs text-gray-300 font-mono truncate">{text}</code>
+      <span className={`text-xs font-bold whitespace-nowrap transition-colors ${copied ? 'text-[#00FF41]' : 'text-gray-500 group-hover:text-[#00FF41]'}`}>
+        {copied ? 'Copied!' : label}
+      </span>
+    </button>
+  );
+};
+
 export default function Landing() {
   const campaign = useCampaign();
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -663,17 +683,19 @@ export default function Landing() {
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
               <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">SKILL.md</div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Knowledge</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-400 leading-relaxed mb-5">
                 A structured knowledge file that any LLM can read to understand the protocol: contract addresses, function signatures, parameter formats, and safe interaction patterns.
               </p>
+              <CopyButton text={`${window.location.origin}/SKILL.md`} label="Copy SKILL.md link" />
             </div>
             {/* Card 2 */}
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
               <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">MCP Server</div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Execution</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-400 leading-relaxed mb-5">
                 16 tools for reading protocol state and executing transactions. Agents connect via Model Context Protocol to open SAFEs, manage positions, and monitor system health — no custom code needed.
               </p>
+              <CopyButton text={`"grinta-cdp": { "type": "stdio", "command": "npx", "args": ["-y", "@grinta/mcp-server"] }`} label="Copy MCP config" />
             </div>
           </div>
           <div className="flex flex-col md:flex-row items-start justify-between gap-12 relative w-full max-w-5xl">
@@ -696,13 +718,15 @@ export default function Landing() {
               <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Contracts in tesnet</h3>
               <div className="flex flex-col gap-4">
                 {[
-                  { name: 'Grit Token', address: '0x02f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
-                  { name: 'SafeManager', address: '0x05be8041f47bd935d8ce98e3b5b2ded6540acc6d4e24c64f3822927c5339eac6' },
-                  { name: 'SafeEngine', address: '0x02f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
-                  { name: 'CollateralJoin', address: '0x0362bd21cf4fd2ada59945e27c0fe10802dde0061e6aeeae0dd81b80669b4687' },
-                  { name: 'wBTC', address: '0x04ab76b407a4967de3683d387c598188d436d22d51416e8c8783156625874e20' },
-                  { name: 'PID Controller', address: '0x01cae0b0de880d26d09a52a4c6e33dcd189fa1bcf40986103d3c3eb46a66eec5' },
-                  { name: 'Grinta Hook', address: '0x07a17830f3aecf5a22ecfea9f3f88cb6eafd9abc425505b167755e21246d9b14' }
+                  { name: 'Grit Token', address: '0x2f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
+                  { name: 'SafeManager', address: '0x5be8041f47bd935d8ce98e3b5b2ded6540acc6d4e24c64f3822927c5339eac6' },
+                  { name: 'SafeEngine', address: '0x2f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
+                  { name: 'CollateralJoin', address: '0x362bd21cf4fd2ada59945e27c0fe10802dde0061e6aeeae0dd81b80669b4687' },
+                  { name: 'wBTC', address: '0x00452bd5c0512a61df7c7be8cfea5e4f893cb40e126bdc40aee6054db955129e' },
+                  { name: 'PID Controller', address: '0x694c76e4817aea5ae3858e99048ceb844679ed479d075ab9e0cd083fc9aee6a' },
+                  { name: 'Grinta Hook', address: '0x0064dc1c0264cc91d871b0cc5cda181730ff79978db5934abc4f2830993b10b5' },
+                  { name: 'OracleRelayer', address: '0x06ed1049ac5d4bccd34eb476a28a62816747c4bb8a90d71f713d21938d5f633d' },
+                  { name: 'USDC', address: '0x0728f54606297716e46af72251733521e2c2a374abbc3dce4bcee8df4744dd30' }
                 ].map((contract, i) => (
                   <div key={i} className="flex justify-between items-center bg-[#0a1a10] p-4 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300">
                     <span className="text-white font-medium" style={{ fontFamily: 'Space Grotesk' }}>{contract.name}</span>

@@ -193,8 +193,8 @@ export default function SafeActions() {
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setTxStatus(null); }}
               className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${activeTab === tab.id
-                ? `${glowBg} text-black ${tabActiveShadow}`
-                : 'text-grinta-text-secondary hover:text-white hover:bg-white/5'
+                  ? `${glowBg} text-black ${tabActiveShadow}`
+                  : 'text-grinta-text-secondary hover:text-white hover:bg-white/5'
                 }`}
             >
               {tab.label}
@@ -268,9 +268,12 @@ export default function SafeActions() {
                     {/* SAFE Dropdown */}
                     <div className="relative">
                       <label className="block text-sm font-medium text-grinta-text-secondary mb-2">Select SAFE</label>
-                      <button
+                      <div
                         onClick={() => setSafeDropdownOpen(!safeDropdownOpen)}
-                        className="w-full flex items-center justify-between bg-grinta-input border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-colors"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSafeDropdownOpen(!safeDropdownOpen); }}
+                        className="w-full flex items-center justify-between bg-grinta-input border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-[#F7931A]/20 flex items-center justify-center text-[#F7931A]">
@@ -290,7 +293,7 @@ export default function SafeActions() {
                           </button>
                           <ChevronDown size={18} className={`text-grinta-text-secondary transition-transform ${safeDropdownOpen ? 'rotate-180' : ''}`} />
                         </div>
-                      </button>
+                      </div>
 
                       {safeDropdownOpen && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-grinta-card border border-grinta-card-border rounded-2xl p-2 shadow-xl backdrop-blur-xl z-20 max-h-48 overflow-y-auto">

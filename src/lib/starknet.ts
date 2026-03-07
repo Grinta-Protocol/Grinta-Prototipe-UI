@@ -148,13 +148,12 @@ export function formatBtcFromWad(wadAmount: bigint): string {
 }
 
 export function formatAnnualRate(rayRate: bigint): string {
-  const diff = rayRate - RAY;
-  const annualBps = (diff * 31536000n * 10000n) / RAY;
-  const whole = annualBps / 100n;
-  const frac = annualBps < 0n ? -annualBps : annualBps;
-  const fracAbs = frac % 100n;
-  const sign = annualBps < 0n ? "-" : "+";
-  return `${sign}${whole}.${fracAbs.toString().padStart(2, "0")}%`;
+  const SECONDS_PER_YEAR = 31536000;
+  const ratePerSecond = Number(rayRate) / Number(RAY);
+  const annualRate = Math.exp(Math.log(ratePerSecond) * SECONDS_PER_YEAR) - 1;
+  const pct = annualRate * 100;
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct.toFixed(2)}%`;
 }
 
 export function toBigInt(val: unknown): bigint {

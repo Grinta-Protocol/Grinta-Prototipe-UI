@@ -140,6 +140,7 @@ export function useUserSafes() {
           const userHex = "0x" + BigInt(address).toString(16);
           if (ownerHex === userHex) {
             const safe = await engine.get_safe(id);
+            console.log("SAFE DATA", id, safe);
             const health = await engine.get_safe_health(id);
             userSafes.push({
               id,
