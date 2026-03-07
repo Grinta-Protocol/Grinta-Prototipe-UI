@@ -83,8 +83,8 @@ export default function Overview() {
                     <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
                         <defs>
                             <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stopColor="#4ADE80" stopOpacity="0.2" />
-                                <stop offset="100%" stopColor="#4ADE80" stopOpacity="0" />
+                                <stop offset="0%" stopColor="#00FF41" stopOpacity="0.2" />
+                                <stop offset="100%" stopColor="#00FF41" stopOpacity="0" />
                             </linearGradient>
                         </defs>
 
@@ -107,7 +107,7 @@ export default function Overview() {
                                 return i === 0 ? `0 ${y}` : `L ${x} ${y}`;
                             }).join(' ')}`}
                             fill="none"
-                            stroke="#4ADE80"
+                            stroke="#00FF41"
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -118,7 +118,7 @@ export default function Overview() {
                             cx="400"
                             cy={100 - ((market.redemptionPrice - 0.995) / 0.01) * 100}
                             r="4"
-                            fill="#4ADE80"
+                            fill="#00FF41"
                             className="animate-pulse"
                         />
                     </svg>

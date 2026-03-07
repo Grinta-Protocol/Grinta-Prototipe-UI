@@ -9,6 +9,7 @@ import Overview from '../components/dashboard/Overview';
 import MyVaults from '../components/dashboard/MyVaults';
 import NetworkMetrics from '../components/dashboard/NetworkMetrics';
 import WalletView from '../components/dashboard/WalletView';
+import PapelOficial from '../components/dashboard/PapelOficial';
 import { useVaults } from '../context/VaultContext';
 
 export default function Dashboard() {
@@ -35,6 +36,7 @@ export default function Dashboard() {
                     <Route path="/vaults" element={<MyVaults />} />
                     <Route path="/metrics" element={<NetworkMetrics />} />
                     <Route path="/wallet" element={<WalletView />} />
+                    <Route path="/papel" element={<PapelOficial />} />
                     <Route path="*" element={<Navigate to="/app/" replace />} />
                   </Routes>
                 </div>
@@ -45,11 +47,9 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column */}
-          {step === 'main_dashboard' && (
-            <div className="hidden lg:block">
-              <RightPanel />
-            </div>
-          )}
+          <div className="hidden lg:block">
+            <RightPanel />
+          </div>
         </div>
       </main>
     </div>

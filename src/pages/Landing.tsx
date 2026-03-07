@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LogoReflecterLabs from '../public/LogoReflecterLabs.png';
+import { useCampaign } from '../hooks/useCampaign';
 
 const SEO = () => {
   useEffect(() => {
@@ -64,6 +65,7 @@ const HackerText = ({ text, href = "#" }: { text: string; href?: string }) => {
 };
 
 export default function Landing() {
+  const campaign = useCampaign();
   const cursorRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -231,7 +233,7 @@ export default function Landing() {
             left: 0;
             width: 20px;
             height: 20px;
-            background: #4ADE80;
+            background: #00FF41;
             border-radius: 50%;
             pointer-events: none;
             mix-blend-mode: difference;
@@ -244,7 +246,7 @@ export default function Landing() {
             width: 90px;
             height: 90px;
             background: transparent;
-            border: 1px solid #4ADE80;
+            border: 1px solid #00FF41;
             backdrop-filter: blur(0px);
         }
 
@@ -256,7 +258,7 @@ export default function Landing() {
             transform: translate(-50%, -50%);
             width: 10px;
             height: 10px;
-            background: #4ADE80;
+            background: #00FF41;
             border-radius: 50%;
         }
 
@@ -340,7 +342,7 @@ export default function Landing() {
         }
 
         .nav-logo:hover::after {
-            color: #4ADE80;
+            color: #00FF41;
             z-index: -2;
             transform: translate(2px, 2px);
             clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
@@ -389,7 +391,7 @@ export default function Landing() {
             left: -10px;
             opacity: 0;
             transition: all 0.2s;
-            color: #4ADE80;
+            color: #00FF41;
         }
 
         .nav-link:hover::before {
@@ -426,7 +428,7 @@ export default function Landing() {
             left: 0;
             width: 100%;
             height: 100%;
-            background: #4ADE80;
+            background: #00FF41;
             transform: translateX(-101%);
             transition: transform 0.4s cubic-bezier(0.7, 0, 0.3, 1);
             z-index: 1;
@@ -491,7 +493,7 @@ export default function Landing() {
         }
 
         .hero h1:hover .char {
-            color: #4ADE80;
+            color: #00FF41;
             -webkit-text-stroke: 0px;
             transform: translateZ(20px);
         }
@@ -502,7 +504,7 @@ export default function Landing() {
             bottom: 5vh;
             left: -10%;
             width: 120%;
-            background: #4ADE80;
+            background: #00FF41;
             color: #000;
             transform: rotate(-2deg);
             padding: 10px 0;
@@ -590,7 +592,7 @@ export default function Landing() {
           <div className="text-center mb-16 max-w-4xl">
             <h2 className="text-4xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Syncopate' }}>
               The Agent-Native<br />
-              <span style={{ color: '#4ADE80' }}>Stablecoin</span>
+              <span style={{ color: '#00FF41' }}>Stablecoin</span>
             </h2>
             <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
               GRIT is a PID-controlled stablecoin on Starknet. No keepers, no governance votes to change rates — every Ekubo swap automatically updates the redemption price.
@@ -601,19 +603,19 @@ export default function Landing() {
             {/* Card 1 */}
             <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
               <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Collateral</div>
-              <div className="text-3xl font-bold text-[#4ADE80] mb-2" style={{ fontFamily: 'Space Grotesk' }}>WBTC</div>
+              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>WBTC</div>
               <div className="text-sm text-gray-400">Wrapped Bitcoin on the Starknet network, bringing the deepest and most secure liquidity in the ecosystem.</div>
             </div>
             {/* Card 2 */}
             <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
               <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Stablecoin</div>
-              <div className="text-3xl font-bold text-[#4ADE80] mb-2" style={{ fontFamily: 'Space Grotesk' }}>GRIT</div>
+              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>GRIT</div>
               <div className="text-sm text-gray-400">A thoughtful currency, not rigidly pegged to $1, designed to absorb volatility through incentives.</div>
             </div>
             {/* Card 3 */}
             <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
               <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Stability</div>
-              <div className="text-3xl font-bold text-[#4ADE80] mb-2" style={{ fontFamily: 'Space Grotesk' }}>PID Controller</div>
+              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>PID Controller</div>
               <div className="text-sm text-gray-400">Real-time algorithmic rate adjustment. Pure mathematics replaces human governance.</div>
             </div>
           </div>
@@ -633,21 +635,21 @@ export default function Landing() {
 
             {/* Step 1 */}
             <div className="flex-1 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#4ADE80] flex items-center justify-center font-bold text-xl mb-6 border border-[#4ADE80]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">1</div>
+              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#00FF41] flex items-center justify-center font-bold text-xl mb-6 border border-[#00FF41]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">1</div>
               <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Connect MCP</h3>
               <p className="text-sm text-gray-400">Agent loads the MCP server and discovers 16 available tools</p>
             </div>
 
             {/* Step 2 */}
             <div className="flex-1 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#4ADE80] flex items-center justify-center font-bold text-xl mb-6 border border-[#4ADE80]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">2</div>
+              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#00FF41] flex items-center justify-center font-bold text-xl mb-6 border border-[#00FF41]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">2</div>
               <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Read Rates</h3>
               <p className="text-sm text-gray-400">Query redemption price, collateral price, and position health</p>
             </div>
 
             {/* Step 3 */}
             <div className="flex-1 flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#4ADE80] flex items-center justify-center font-bold text-xl mb-6 border border-[#4ADE80]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">3</div>
+              <div className="w-16 h-16 rounded-full bg-[#0a1a10] text-[#00FF41] flex items-center justify-center font-bold text-xl mb-6 border border-[#00FF41]/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">3</div>
               <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Execute Strategy</h3>
               <p className="text-sm text-gray-400">Open SAFEs, adjust positions, and manage risk autonomously</p>
             </div>
@@ -659,7 +661,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
             {/* Card 1 */}
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
-              <div className="inline-block px-3 py-1 bg-[#4ADE80]/10 text-[#4ADE80] text-xs font-bold rounded mb-6 border border-[#4ADE80]/20">SKILL.md</div>
+              <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">SKILL.md</div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Knowledge</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
                 A structured knowledge file that any LLM can read to understand the protocol: contract addresses, function signatures, parameter formats, and safe interaction patterns.
@@ -667,7 +669,7 @@ export default function Landing() {
             </div>
             {/* Card 2 */}
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
-              <div className="inline-block px-3 py-1 bg-[#4ADE80]/10 text-[#4ADE80] text-xs font-bold rounded mb-6 border border-[#4ADE80]/20">MCP Server</div>
+              <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">MCP Server</div>
               <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Execution</h3>
               <p className="text-sm text-gray-400 leading-relaxed">
                 16 tools for reading protocol state and executing transactions. Agents connect via Model Context Protocol to open SAFEs, manage positions, and monitor system health — no custom code needed.
@@ -691,7 +693,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-6xl">
             {/* Deployed Contracts */}
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <h3 className="text-2xl font-bold text-[#4ADE80] mb-6" style={{ fontFamily: 'Syncopate' }}>Contracts in tesnet</h3>
+              <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Contracts in tesnet</h3>
               <div className="flex flex-col gap-4">
                 {[
                   { name: 'Grit Token', address: '0x02f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
@@ -702,9 +704,9 @@ export default function Landing() {
                   { name: 'PID Controller', address: '0x01cae0b0de880d26d09a52a4c6e33dcd189fa1bcf40986103d3c3eb46a66eec5' },
                   { name: 'Grinta Hook', address: '0x07a17830f3aecf5a22ecfea9f3f88cb6eafd9abc425505b167755e21246d9b14' }
                 ].map((contract, i) => (
-                  <div key={i} className="flex justify-between items-center bg-[#0a1a10] p-4 rounded-xl border border-[#4ADE80]/10 hover:border-[#4ADE80]/40 transition duration-300">
+                  <div key={i} className="flex justify-between items-center bg-[#0a1a10] p-4 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300">
                     <span className="text-white font-medium" style={{ fontFamily: 'Space Grotesk' }}>{contract.name}</span>
-                    <a href={`https://starkscan.co/contract/${contract.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#4ADE80] hover:text-white transition-colors truncate w-32 md:w-48 text-right font-mono">
+                    <a href={`https://starkscan.co/contract/${contract.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#00FF41] hover:text-white transition-colors truncate w-32 md:w-48 text-right font-mono">
                       {contract.address.slice(0, 6)}...{contract.address.slice(-4)} ↗
                     </a>
                   </div>
@@ -714,21 +716,21 @@ export default function Landing() {
 
             {/* Agent Profiles */}
             <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <h3 className="text-2xl font-bold text-[#4ADE80] mb-6" style={{ fontFamily: 'Syncopate' }}>Agent Profiles</h3>
+              <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Agent Profiles</h3>
               <div className="flex flex-col gap-6 h-full">
                 {[
                   { name: 'motx', link: 'https://social.moltx.io/grinta' },
                   { name: '4claw', link: 'https://social.moltx.io/grinta' },
                   { name: 'moltbook', link: 'https://social.moltx.io/grinta' }
                 ].map((agent, i) => (
-                  <div key={i} className="group relative overflow-hidden bg-[#0a1a10] p-6 rounded-xl border border-[#4ADE80]/10 hover:border-[#4ADE80]/40 transition duration-300 flex items-center justify-between">
+                  <div key={i} className="group relative overflow-hidden bg-[#0a1a10] p-6 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-black border border-[#4ADE80]/30 shadow-[0_0_10px_rgba(74,222,128,0.2)] flex items-center justify-center text-[#4ADE80] font-bold text-lg" style={{ fontFamily: 'Syncopate' }}>
+                      <div className="w-12 h-12 rounded-full bg-black border border-[#00FF41]/30 shadow-[0_0_10px_rgba(74,222,128,0.2)] flex items-center justify-center text-[#00FF41] font-bold text-lg" style={{ fontFamily: 'Syncopate' }}>
                         {agent.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-xl font-bold text-white group-hover:text-[#4ADE80] transition-colors" style={{ fontFamily: 'Space Grotesk', textTransform: 'capitalize' }}>{agent.name}</span>
+                      <span className="text-xl font-bold text-white group-hover:text-[#00FF41] transition-colors" style={{ fontFamily: 'Space Grotesk', textTransform: 'capitalize' }}>{agent.name}</span>
                     </div>
-                    <a href={agent.link} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-[#4ADE80] text-[#4ADE80] rounded hover:bg-[#4ADE80] hover:text-black transition-all font-bold text-sm" style={{ fontFamily: 'Space Grotesk', textTransform: 'uppercase' }}>
+                    <a href={agent.link} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-[#00FF41] text-[#00FF41] rounded hover:bg-[#00FF41] hover:text-black transition-all font-bold text-sm" style={{ fontFamily: 'Space Grotesk', textTransform: 'uppercase' }}>
                       Profile ↗
                     </a>
                   </div>
@@ -759,11 +761,60 @@ export default function Landing() {
           </div>
         </section>
 
-        <footer style={{ height: '40vh', background: '#e0e0e0', color: '#030303', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-          <h2 style={{ fontFamily: 'Syncopate', fontSize: '3rem', marginBottom: '1rem' }}>
-            <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>GRINTA</Link>
-          </h2>
-          <p>© 2026 Grinta Protocol. All rights reserved. Built for humans and the agent economy.</p>
+        <footer className="footer-premium" style={{ height: 'auto', padding: '10vh 5vw', background: '#e0e0e0', color: '#030303', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+          <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Branding */}
+            <div className="flex flex-col items-center md:items-start">
+              <h2 style={{ fontFamily: 'Syncopate', fontSize: '3rem', marginBottom: '1rem' }}>
+                <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>GRINTA</Link>
+              </h2>
+              <p className="text-sm font-bold text-gray-600 mb-4 tracking-tighter">© 2026 Grinta Protocol. All rights reserved. Built for humans and the agent economy.</p>
+              <div className="flex gap-4 opacity-30 hover:opacity-100 transition-opacity">
+                <span className="text-[10px] font-black uppercase tracking-widest border border-black/10 px-2 py-1 rounded">Starknet</span>
+                <span className="text-[10px] font-black uppercase tracking-widest border border-black/10 px-2 py-1 rounded">Agentic CDP</span>
+                <span className="text-[10px] font-black uppercase tracking-widest border border-black/10 px-2 py-1 rounded">PI Control</span>
+              </div>
+            </div>
+
+            {/* Campaign Activator - Restricted Admin Tool */}
+            <div className="bg-black/5 border border-black/10 rounded-[32px] p-8 flex flex-col items-center justify-center text-center backdrop-blur-sm group hover:border-black/20 transition-all">
+              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-600 rounded-full border border-red-500/20">
+                <div className={`w-2 h-2 rounded-full ${campaign.state.isActive ? 'bg-red-500 animate-pulse' : 'bg-red-300'}`}></div>
+                <span className="text-[9px] font-black uppercase tracking-widest leading-none">Campaign Activator</span>
+              </div>
+
+              <h4 className="text-lg font-bold mb-3 font-syncopate uppercase tracking-widest">30-Day Protocol Launch</h4>
+              <p className="text-xs text-gray-500 mb-6 leading-relaxed max-w-sm">
+                Triggers the 850-post automated sequence across MoltX, 4claw, and Moltbook.
+                <span className="text-red-600 font-bold block mt-1 uppercase text-[9px]">Aviso: Esta acción es irreversible una vez activada.</span>
+              </p>
+
+              <button
+                onClick={campaign.activateCampaign}
+                disabled={campaign.state.isActive}
+                className={`w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 border relative overflow-hidden group
+                  ${campaign.state.isActive
+                    ? 'bg-red-500 text-white border-red-500 cursor-not-allowed shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+                    : 'bg-white text-black border-black/10 hover:bg-black hover:text-white hover:border-black hover:shadow-2xl active:scale-95'
+                  }`}
+              >
+                {campaign.state.isActive ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
+                    Campaign is LIVE - Posting Hourly
+                  </span>
+                ) : (
+                  <span>Activate 30-Day Campaign 🚀</span>
+                )}
+              </button>
+
+              {campaign.state.isActive && (
+                <div className="mt-4 text-[9px] font-mono text-gray-400">
+                  STARTED: {new Date(campaign.state.startTime).toLocaleDateString()} | POSTS SENT: {campaign.state.lastRunPostIndex}
+                </div>
+              )}
+            </div>
+          </div>
         </footer>
       </div>
     </div>

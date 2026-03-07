@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText } from 'lucide-react';
 import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 
@@ -85,6 +85,20 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 space-y-3">
+        <Link
+          to="/app/papel"
+          onClick={(e) => handleNavigation(e, '/app/papel')}
+          className="block p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/20 hover:border-[#00FF41]/50 hover:bg-[#00FF41]/20 transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <FileText size={16} className="text-[#00FF41]" />
+            <span className="text-xs font-bold text-[#00FF41] uppercase tracking-wider">Papel Oficial Grinta</span>
+          </div>
+          <p className="text-[11px] text-gray-400 leading-tight">
+            Descubre el Protocolo y el testea el Modelo Económico Interactivo.
+          </p>
+        </Link>
+
         <a
           href="https://x.com/intent/post?text=@GrintaProtocol%20Feedback:%20"
           target="_blank"

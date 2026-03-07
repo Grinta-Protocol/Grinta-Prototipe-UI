@@ -37,7 +37,7 @@ export default function MyVaults() {
             <div className="grid grid-cols-1 gap-4">
                 {vaults.map((vault) => {
                     const isManual = vault.type === 'manual';
-                    const accentColor = isManual ? '#F7931A' : '#4ADE80';
+                    const accentColor = isManual ? '#F7931A' : '#00FF41';
                     const accentBg = isManual ? 'bg-[#F7931A]/10' : 'bg-grinta-accent/10';
                     const accentText = isManual ? 'text-[#F7931A]' : 'text-grinta-accent';
                     const borderHover = isManual ? 'hover:border-[#F7931A]/50' : 'hover:border-grinta-accent/50';
