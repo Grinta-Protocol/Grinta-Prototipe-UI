@@ -623,8 +623,15 @@ export default function Landing() {
             {/* Card 1 */}
             <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
               <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Collateral</div>
-              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>WBTC</div>
-              <div className="text-sm text-gray-400">Wrapped Bitcoin on the Starknet network, bringing the deepest and most secure liquidity in the ecosystem.</div>
+              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>BTC Synthetics</div>
+              <div className="text-sm text-gray-400 mb-4">Grinta accepts synthetic and yield-bearing BTC tokens as collateral — unlocking Bitcoin's deepest liquidity across the ecosystem.</div>
+              <div className="flex flex-wrap justify-center gap-2 mt-3">
+                {['WBTC', 'tBTC', 'cbBTC', 'LBTC', 'SolvBTC', 'eBTC'].map((token) => (
+                  <span key={token} className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/20">
+                    {token}
+                  </span>
+                ))}
+              </div>
             </div>
             {/* Card 2 */}
             <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
