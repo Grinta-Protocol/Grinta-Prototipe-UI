@@ -1,24 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useVaults } from '../../context/VaultContext';
-import { Wallet, ArrowDownRight, ArrowUpRight, Bitcoin, CreditCard, ChevronRight } from 'lucide-react';
+import { Wallet, ArrowDownRight, ArrowUpRight, Bitcoin, CreditCard, ChevronRight, Loader2, Coins, TrendingUp } from 'lucide-react';
+import { useAccount, useSendTransaction } from '@starknet-react/core';
+import { useWbtcBalance } from '../../hooks/useGrinta';
+import { config } from '../../config/contracts';
+import { formatBtcAmount } from '../../lib/starknet';
 
 export default function WalletView() {
-    const { balanceL1, balanceL2, vaults, claimAllYield } = useVaults();
+    const { vaults, claimAllYield } = useVaults();
+    const { address, isConnected } = useAccount();
+    const { sendAsync, isPending } = useSendTransaction({});
+    const { balance: wbtcBalance, refetch: refetchBalance } = useWbtcBalance();
+
+    const [isMinting, setIsMinting] = useState(false);
 
     const totalUserYield = vaults.reduce((acc, v) => acc + v.yieldEarned, 0);
     const totalVaultDeposits = vaults.reduce((acc, v) => acc + v.amount, 0);
+
+    const handleGetWbtc = async () => {
+        if (!address || isPending) return;
+        setIsMinting(true);
+        try {
+            await sendAsync([
+                {
+                    contractAddress: config.wbtcAddress,
+                    entrypoint: 'mint',
+                    calldata: [address, '0x5f5e100', '0x0'], // 1.0 WBTC (8 decimals)
+                }
+            ]);
+            setTimeout(() => refetchBalance(), 3000);
+        } catch (err) {
+            console.error('Mint failed:', err);
+        } finally {
+            setIsMinting(false);
+        }
+    };
 
     return (
         <div className="w-full space-y-8 animate-in fade-in duration-700">
             {/* Wallet Balance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <BalanceCard
-                    label="BTC en L1 (Simulado)"
-                    amount={balanceL1}
-                    unit="BTC"
-                    icon={<Bitcoin size={24} className="text-[#F7931A]" />}
-                    color="border-orange-500/20"
-                />
+                {/* WBTC Faucet Card (L2) - Orange Bitcoin Style */}
+                <div className={`bg-grinta-card border border-orange-500/20 rounded-[28px] p-6 shadow-xl relative overflow-hidden group`}>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">
+                                <Bitcoin size={24} />
+                            </div>
+                            <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">WBTC (Faucet L2)</span>
+                        </div>
+                        {isConnected && wbtcBalance === 0n && (
+                            <button
+                                onClick={handleGetWbtc}
+                                disabled={isMinting || isPending}
+                                className="text-[10px] font-black bg-orange-500 text-black px-3 py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] flex items-center gap-1.5"
+                            >
+                                {isMinting ? <Loader2 size={12} className="animate-spin" /> : <ArrowDownRight size={12} />}
+                                SOLICITAR WBTC
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-white tracking-tight">{formatBtcAmount(wbtcBalance)}</span>
+                        <span className="text-sm font-bold text-grinta-text-secondary">WBTC</span>
+                    </div>
+                    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
+                        <Bitcoin size={100} />
+                    </div>
+                </div>
+
                 <BalanceCard
                     label="BTC en Vaults (L2)"
                     amount={totalVaultDeposits}
@@ -27,11 +77,11 @@ export default function WalletView() {
                     color="border-grinta-accent/20"
                 />
                 <BalanceCard
-                    label="BTC Disponible (L2)"
-                    amount={balanceL2}
+                    label="Rendimiento Total"
+                    amount={totalUserYield}
                     unit="BTC"
-                    icon={<Wallet size={24} className="text-blue-400" />}
-                    color="border-blue-500/20"
+                    icon={<TrendingUp size={24} className="text-purple-400" />}
+                    color="border-purple-500/20"
                 />
             </div>
 
@@ -82,7 +132,7 @@ export default function WalletView() {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm font-bold text-white">-{v.amount.toFixed(2)} BTC</div>
+                                    <div className="text-sm font-bold text-white">-{v.amount.toFixed(2)} WBTC</div>
                                     <div className="text-[10px] text-grinta-text-secondary">Justo ahora</div>
                                 </div>
                             </div>
@@ -96,15 +146,15 @@ export default function WalletView() {
 
 function BalanceCard({ label, amount, unit, icon, color }: { label: string, amount: number, unit: string, icon: React.ReactNode, color: string }) {
     return (
-        <div className={`bg-grinta-card border ${color} rounded-[28px] p-6 shadow-xl`}>
+        <div className={`bg-grinta-card border ${color} rounded-[28px] p-6 shadow-xl relative group overflow-hidden`}>
             <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-xl bg-white/5">
+                <div className="p-2 rounded-xl bg-white/5 group-hover:scale-110 transition-transform">
                     {icon}
                 </div>
                 <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">{label}</span>
             </div>
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white">{amount.toFixed(2)}</span>
+                <span className="text-3xl font-bold text-white tracking-tight">{amount.toFixed(4)}</span>
                 <span className="text-sm font-bold text-grinta-text-secondary">{unit}</span>
             </div>
         </div>

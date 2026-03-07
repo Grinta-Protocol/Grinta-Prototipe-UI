@@ -1,0 +1,100 @@
+import React, { useState } from 'react';
+import { Wallet, LogOut, ChevronDown, MousePointerClick } from 'lucide-react';
+import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
+
+interface WalletConnectProps {
+    variant?: 'nav' | 'flow';
+    className?: string;
+}
+
+export default function WalletConnect({ variant = 'nav', className = '' }: WalletConnectProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const { address, isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
+    const { disconnect } = useDisconnect();
+
+    const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+
+    if (isConnected && address) {
+        return (
+            <div className={`relative ${className}`}>
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className={variant === 'nav'
+                        ? "h-10 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/10 transition-all"
+                        : "w-full py-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-lg flex items-center justify-center gap-3"
+                    }
+                >
+                    <Wallet size={variant === 'nav' ? 14 : 20} className="text-grinta-accent" />
+                    <span>{shortAddress}</span>
+                    <ChevronDown size={variant === 'nav' ? 12 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#0D0F10] border border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl z-50">
+                        <button
+                            onClick={() => {
+                                disconnect();
+                                setIsOpen(false);
+                            }}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-500/10 rounded-xl transition-colors text-red-500 font-bold text-xs"
+                        >
+                            <span>Desconectar</span>
+                            <LogOut size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div className={`relative ${className}`}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={variant === 'nav'
+                    ? "h-10 px-6 rounded-full bg-grinta-accent text-black font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-grinta-accent/20"
+                    : "w-full py-6 rounded-3xl bg-grinta-accent text-black font-black text-lg uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                }
+            >
+                {variant === 'nav' ? <Wallet size={14} /> : <MousePointerClick size={20} />}
+                <span>Conectar Billetera</span>
+                <ChevronDown size={variant === 'nav' ? 12 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className={`absolute top-full right-0 mt-2 w-64 bg-[#0D0F10] border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in duration-200`}>
+                    <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">Elegir Billetera</div>
+                    <div className="space-y-1">
+                        {connectors.map((connector) => (
+                            <button
+                                key={connector.id}
+                                onClick={() => {
+                                    connect({ connector });
+                                    setIsOpen(false);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-2xl transition-all group border border-transparent hover:border-white/5"
+                            >
+                                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-grinta-accent/20 group-hover:text-grinta-accent transition-colors">
+                                    {connector.id.toLowerCase().includes('argent') ? (
+                                        <img src="https://argent.xyz/favicon.ico" className="w-4 h-4" alt="A" />
+                                    ) : connector.id.toLowerCase().includes('braavos') ? (
+                                        <img src="https://braavos.app/favicon.ico" className="w-4 h-4" alt="B" />
+                                    ) : (
+                                        <Wallet size={16} />
+                                    )}
+                                </div>
+                                <div className="flex flex-col items-start">
+                                    <span className="text-white font-bold text-xs">
+                                        {connector.id.toLowerCase().includes('argent') ? 'Argent' : connector.id.toLowerCase().includes('braavos') ? 'Braavos' : connector.name}
+                                    </span>
+                                    <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest pt-0.5">Starknet L2</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

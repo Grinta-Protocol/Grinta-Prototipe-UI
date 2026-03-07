@@ -6,6 +6,7 @@ import { useVaults, Step } from '../context/VaultContext';
 import { config } from '../config/contracts';
 import { getSafeEngine, parseBtcAmount, parseGritAmount, btcToWad, formatBtcAmount } from '../lib/starknet';
 import { useWbtcBalance } from '../hooks/useGrinta';
+import WalletConnect from './WalletConnect';
 
 export default function NewVaultFlow() {
     const { step, setStep, vaults, addVault, setActiveVaultId, activeVaultId, depositToVault, withdrawFromVault, borrowGrit, repayGrit } = useVaults();
@@ -75,7 +76,18 @@ export default function NewVaultFlow() {
         if ((step === 'fund' || step === 'deposit') && isConnected) {
             refetchBalance();
         }
-    }, [step, isConnected]);
+    }, [step, isConnected, refetchBalance]);
+
+    // Redirección automática si no hay fondos en el paso de Depósito
+    useEffect(() => {
+        if (step === 'deposit' && !balanceLoading && wbtcBalance === 0n) {
+            if (isConnected) {
+                setStep('fund');
+            } else {
+                setStep('connect');
+            }
+        }
+    }, [step, wbtcBalance, balanceLoading, isConnected, setStep]);
 
     const handleConnectorClick = (connector: any) => {
         setConnectingWallet(true);
@@ -244,43 +256,52 @@ export default function NewVaultFlow() {
 
     return (
         <div className="w-full max-w-6xl mx-auto py-8 px-6">
-            {/* Step Indicator */}
+            {/* Step Indicator - Premium Redesign */}
             {step !== 'main_dashboard' && step !== 'vault_view' && (
-                <div className="flex flex-col items-center mb-12">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center mb-16 mt-8">
+                    <div className="flex items-center">
                         {flowSteps.map((s, idx) => {
-                            const isPast = flowSteps.findIndex(fs => fs.id === s.id) < currentStepIdx;
                             const isCurrent = s.id === step;
+                            const isPast = flowSteps.findIndex(fs => fs.id === s.id) < currentStepIdx;
+
                             return (
                                 <React.Fragment key={s.id}>
-                                    <div className="flex flex-col items-center gap-3 relative">
+                                    <div className="flex flex-col items-center gap-4 relative">
                                         <motion.div
                                             initial={false}
                                             animate={{
-                                                backgroundColor: isPast || isCurrent ? 'var(--grinta-accent)' : 'rgba(255,255,255,0.05)',
-                                                scale: isCurrent ? 1.1 : 1
+                                                backgroundColor: isCurrent ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.05)',
+                                                borderColor: isCurrent ? 'rgba(74,222,128,0.5)' : 'rgba(255,255,255,0.05)',
+                                                boxShadow: isCurrent ? '0 0 20px rgba(74,222,128,0.15)' : 'none',
+                                                color: isCurrent || isPast ? '#fff' : 'rgba(255,255,255,0.2)'
                                             }}
-                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-all shadow-lg ${isPast || isCurrent ? 'text-black shadow-grinta-accent/20' : 'text-grinta-text-secondary border border-white/10'}`}
+                                            className={`w-16 h-16 rounded-[22px] flex items-center justify-center font-black text-2xl transition-all border`}
                                         >
-                                            {isPast ? <CheckCircle2 size={24} /> : idx + 1}
+                                            {idx + 1}
                                         </motion.div>
-                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isCurrent ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-40'}`}>
-                                            {s.label}
-                                        </span>
-                                        {isCurrent && (
-                                            <motion.div
-                                                layoutId="activeStep"
-                                                className="absolute -bottom-2 w-1 h-1 bg-grinta-accent rounded-full"
-                                            />
-                                        )}
+
+                                        <div className="flex flex-col items-center gap-2 min-w-[120px]">
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${isCurrent ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-40'}`}>
+                                                {s.label}
+                                            </span>
+                                            {isCurrent && (
+                                                <motion.div
+                                                    layoutId="activeStepDot"
+                                                    className="w-1.5 h-1.5 bg-grinta-accent rounded-full shadow-[0_0_8px_rgba(74,222,128,0.8)]"
+                                                />
+                                            )}
+                                        </div>
                                     </div>
+
                                     {idx < flowSteps.length - 1 && (
-                                        <div className="relative w-20 h-[2px] mb-8 bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ width: "0%" }}
-                                                animate={{ width: isPast ? "100%" : "0%" }}
-                                                className="absolute top-0 left-0 h-full bg-grinta-accent"
-                                            />
+                                        <div className="mx-4 mb-10 w-24 flex items-center">
+                                            <div className="h-[1px] w-full border-t border-dashed border-white/10 relative">
+                                                <motion.div
+                                                    initial={{ width: '0%' }}
+                                                    animate={{ width: isPast ? '100%' : '0%' }}
+                                                    className="absolute top-[-1px] left-0 h-[1px] bg-grinta-accent shadow-[0_0_10px_rgba(74,222,128,0.3)] transition-all duration-500"
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </React.Fragment>
@@ -294,68 +315,29 @@ export default function NewVaultFlow() {
                 {step === 'connect' && (
                     <motion.div
                         key="connect"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="max-w-md mx-auto"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
+                        className="max-w-xl mx-auto"
                     >
-                        <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl text-center">
-                            {isConnected ? (
-                                <motion.div
-                                    initial={{ scale: 0.9, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className="py-10"
-                                >
-                                    <div className="w-20 h-20 bg-grinta-accent/20 rounded-full flex items-center justify-center mx-auto mb-6 text-grinta-accent border-4 border-grinta-accent/50">
-                                        <CheckCircle2 size={48} />
-                                    </div>
-                                    <h2 className="text-3xl font-black text-white mb-2 font-syncopate uppercase tracking-tight">Acceso Concedido</h2>
-                                    <p className="text-grinta-accent font-mono text-sm">
-                                        {address.slice(0, 6)}...{address.slice(-6)}
-                                    </p>
-                                    <div className="mt-8 flex justify-center gap-1">
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
-                                    </div>
-                                </motion.div>
-                            ) : (
-                                <>
-                                    <div className="inline-flex p-4 rounded-3xl bg-grinta-accent/10 mb-8">
-                                        <Wallet size={48} className="text-grinta-accent" />
-                                    </div>
-                                    <h2 className="text-3xl font-extrabold text-white mb-4 font-syncopate uppercase tracking-tight">Starknet Login</h2>
-                                    <p className="text-grinta-text-secondary text-sm mb-10 leading-relaxed">
-                                        Detectaremos automáticamente tu billetera del navegador para iniciar el protocolo Grinta.
-                                    </p>
+                        <div className="bg-white/5 border border-white/10 rounded-[40px] p-12 backdrop-blur-xl text-center relative overflow-hidden group">
+                            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-grinta-accent/30 to-transparent"></div>
 
-                                    <button
-                                        onClick={() => {
-                                            const available = connectors.find(c => {
-                                                if (typeof c.available === 'function') return c.available();
-                                                return !!c.available;
-                                            });
-                                            if (available) {
-                                                connect({ connector: available });
-                                            } else if (connectors.length > 0) {
-                                                connect({ connector: connectors[0] });
-                                            }
-                                        }}
-                                        className="w-full py-6 rounded-3xl bg-grinta-accent text-black font-black text-lg hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-grinta-accent/20 uppercase tracking-widest flex items-center justify-center gap-3"
-                                    >
-                                        <MousePointerClick size={24} />
-                                        <span>Conectar Billetera</span>
-                                    </button>
+                            <div className="mb-10 relative">
+                                <div className="w-24 h-24 bg-grinta-accent/10 rounded-[32px] mx-auto mb-8 flex items-center justify-center text-grinta-accent border border-grinta-accent/20 shadow-[0_0_30px_rgba(74,222,128,0.1)]">
+                                    <Wallet size={40} />
+                                </div>
+                                <h2 className="text-4xl font-extrabold text-white mb-4 font-syncopate uppercase tracking-tight">Acceso</h2>
+                                <p className="text-grinta-text-secondary text-sm max-w-sm mx-auto leading-relaxed">
+                                    Conecta tu billetera Starknet para configurar tu nueva estrategia en Grinta Protocol.
+                                </p>
+                            </div>
 
-                                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-grinta-text-secondary">Soportado:</span>
-                                        <div className="flex gap-4">
-                                            <img src="https://argent.xyz/favicon.ico" className="w-4 h-4" alt="Argent" />
-                                            <img src="https://braavos.app/favicon.ico" className="w-4 h-4" alt="Braavos" />
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                            <WalletConnect variant="flow" />
+
+                            <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-4 opacity-100 group-hover:opacity-100 transition-all duration-700 grayscale group-hover:grayscale-0">
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Billeteras Soportadas Argent y Braavos</span>
+                            </div>
                         </div>
                     </motion.div>
                 )}
