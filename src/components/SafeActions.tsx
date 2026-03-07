@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, MoreVertical, ArrowDownUp, Info, ChevronDown, RefreshCw } from 'lucide-react';
+import { ShieldCheck, MoreVertical, ArrowDownUp, Info, ChevronDown, RefreshCw, Bitcoin } from 'lucide-react';
 import { useAccount, useSendTransaction } from '@starknet-react/core';
 import { config } from '../config/contracts';
 import { useRates, useUserSafes } from '../hooks/useGrinta';
@@ -192,11 +192,10 @@ export default function SafeActions() {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setTxStatus(null); }}
-              className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                activeTab === tab.id
-                  ? `${glowBg} text-black ${tabActiveShadow}`
-                  : 'text-grinta-text-secondary hover:text-white hover:bg-white/5'
-              }`}
+              className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${activeTab === tab.id
+                ? `${glowBg} text-black ${tabActiveShadow}`
+                : 'text-grinta-text-secondary hover:text-white hover:bg-white/5'
+                }`}
             >
               {tab.label}
             </button>
@@ -299,9 +298,8 @@ export default function SafeActions() {
                             <button
                               key={safe.id}
                               onClick={() => { setSelectedSafeId(safe.id); setSafeDropdownOpen(false); }}
-                              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-sm ${
-                                safe.id === selectedSafeId ? 'bg-white/10 text-white' : 'hover:bg-white/5 text-grinta-text-secondary'
-                              }`}
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-sm ${safe.id === selectedSafeId ? 'bg-white/10 text-white' : 'hover:bg-white/5 text-grinta-text-secondary'
+                                }`}
                             >
                               <span className="font-semibold">SAFE #{safe.id}</span>
                               <span className="text-xs">

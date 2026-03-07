@@ -26,13 +26,13 @@ export default function NewVaultFlow() {
     // Navigation safety: ask before leaving
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (['connect', 'deposit', 'create_vault'].includes(step)) {
+            if (['connect', 'fund', 'deposit', 'create_vault'].includes(step)) {
                 e.preventDefault();
                 e.returnValue = '';
             }
         };
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && ['connect', 'deposit', 'create_vault'].includes(step)) {
+            if (e.key === 'Escape' && ['connect', 'fund', 'deposit', 'create_vault'].includes(step)) {
                 if (window.confirm('¿Quieres salir? Se perderá el progreso actual.')) {
                     setStep('main_dashboard');
                 }
@@ -48,24 +48,31 @@ export default function NewVaultFlow() {
 
     const flowSteps = [
         { id: 'connect', label: 'Conexión' },
+        { id: 'fund', label: 'Fondeo' },
         { id: 'deposit', label: 'Depósito' },
         { id: 'create_vault', label: 'Estrategia' },
-        { id: 'vault_view', label: 'Vault Live' }
     ];
 
     const currentStepIdx = flowSteps.findIndex(s => s.id === step);
 
-    // Advance from connect step only after user explicitly clicked a connector
+    // Avance automático si ya está conectado o acaba de conectarse
     useEffect(() => {
-        if (step === 'connect' && connectingWallet && isConnected && address) {
-            setConnectingWallet(false);
-            setStep('deposit');
+        if (step === 'connect' && isConnected && address) {
+            const timer = setTimeout(() => {
+                setStep('fund');
+            }, 1200);
+            return () => clearTimeout(timer);
         }
-    }, [step, connectingWallet, isConnected, address]);
 
-    // Refetch WBTC balance when arriving at deposit step
+        // Reset sistémico al desconectar
+        if (!isConnected && step !== 'connect' && step !== 'main_dashboard') {
+            setStep('main_dashboard');
+        }
+    }, [step, isConnected, address, setStep]);
+
+    // Refetch WBTC balance when arriving at fund or deposit step
     useEffect(() => {
-        if (step === 'deposit' && isConnected) {
+        if ((step === 'fund' || step === 'deposit') && isConnected) {
             refetchBalance();
         }
     }, [step, isConnected]);
@@ -228,23 +235,42 @@ export default function NewVaultFlow() {
         <div className="w-full max-w-6xl mx-auto py-8 px-6">
             {/* Step Indicator */}
             {step !== 'main_dashboard' && step !== 'vault_view' && (
-                <div className="flex items-center justify-center mb-12">
+                <div className="flex flex-col items-center mb-12">
                     <div className="flex items-center gap-4">
-                        {flowSteps.slice(0, 3).map((s, idx) => {
+                        {flowSteps.map((s, idx) => {
                             const isPast = flowSteps.findIndex(fs => fs.id === s.id) < currentStepIdx;
                             const isCurrent = s.id === step;
                             return (
                                 <React.Fragment key={s.id}>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 ${isPast || isCurrent ? 'bg-grinta-accent text-black' : 'bg-white/5 text-grinta-text-secondary border border-white/10'}`}>
-                                            {isPast ? <CheckCircle2 size={20} /> : idx + 1}
-                                        </div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${isCurrent ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-50'}`}>
+                                    <div className="flex flex-col items-center gap-3 relative">
+                                        <motion.div
+                                            initial={false}
+                                            animate={{
+                                                backgroundColor: isPast || isCurrent ? 'var(--grinta-accent)' : 'rgba(255,255,255,0.05)',
+                                                scale: isCurrent ? 1.1 : 1
+                                            }}
+                                            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg transition-all shadow-lg ${isPast || isCurrent ? 'text-black shadow-grinta-accent/20' : 'text-grinta-text-secondary border border-white/10'}`}
+                                        >
+                                            {isPast ? <CheckCircle2 size={24} /> : idx + 1}
+                                        </motion.div>
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isCurrent ? 'text-grinta-accent' : 'text-grinta-text-secondary opacity-40'}`}>
                                             {s.label}
                                         </span>
+                                        {isCurrent && (
+                                            <motion.div
+                                                layoutId="activeStep"
+                                                className="absolute -bottom-2 w-1 h-1 bg-grinta-accent rounded-full"
+                                            />
+                                        )}
                                     </div>
-                                    {idx < 2 && (
-                                        <div className={`w-20 h-[2px] mb-6 transition-colors duration-500 ${isPast ? 'bg-grinta-accent' : 'bg-white/5'}`}></div>
+                                    {idx < flowSteps.length - 1 && (
+                                        <div className="relative w-20 h-[2px] mb-8 bg-white/5 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: "0%" }}
+                                                animate={{ width: isPast ? "100%" : "0%" }}
+                                                className="absolute top-0 left-0 h-full bg-grinta-accent"
+                                            />
+                                        </div>
                                     )}
                                 </React.Fragment>
                             );
@@ -262,33 +288,163 @@ export default function NewVaultFlow() {
                         exit={{ opacity: 0, y: -20 }}
                         className="max-w-md mx-auto"
                     >
-                        <div className="text-center mb-10">
-                            <div className="inline-flex p-4 rounded-3xl bg-grinta-accent/10 mb-6">
-                                <Wallet size={40} className="text-grinta-accent" />
-                            </div>
-                            <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Conectar Starknet</h2>
-                            <p className="text-grinta-text-secondary text-sm">Selecciona tu billetera para interactuar con Grinta Protocol.</p>
-                        </div>
-
-                        <div className="space-y-3">
-                            {connectors.map((connector) => (
-                                <button
-                                    key={connector.id}
-                                    onClick={() => handleConnectorClick(connector)}
-                                    className="w-full group relative overflow-hidden flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-grinta-accent/50 hover:bg-white/10 transition-all text-left"
+                        <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl text-center">
+                            {isConnected ? (
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="py-10"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-black/40 flex items-center justify-center text-white ring-1 ring-white/10 group-hover:ring-grinta-accent/30 transition-all">
+                                    <div className="w-20 h-20 bg-grinta-accent/20 rounded-full flex items-center justify-center mx-auto mb-6 text-grinta-accent border-4 border-grinta-accent/50">
+                                        <CheckCircle2 size={48} />
+                                    </div>
+                                    <h2 className="text-3xl font-black text-white mb-2 font-syncopate uppercase tracking-tight">Acceso Concedido</h2>
+                                    <p className="text-grinta-accent font-mono text-sm">
+                                        {address.slice(0, 6)}...{address.slice(-6)}
+                                    </p>
+                                    <div className="mt-8 flex justify-center gap-1">
+                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
+                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
+                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-grinta-accent" />
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <>
+                                    <div className="inline-flex p-4 rounded-3xl bg-grinta-accent/10 mb-8">
+                                        <Wallet size={48} className="text-grinta-accent" />
+                                    </div>
+                                    <h2 className="text-3xl font-extrabold text-white mb-4 font-syncopate uppercase tracking-tight">Starknet Login</h2>
+                                    <p className="text-grinta-text-secondary text-sm mb-10 leading-relaxed">
+                                        Detectaremos automáticamente tu billetera del navegador para iniciar el protocolo Grinta.
+                                    </p>
+
+                                    <button
+                                        onClick={() => {
+                                            const available = connectors.find(c => {
+                                                if (typeof c.available === 'function') return c.available();
+                                                return !!c.available;
+                                            });
+                                            if (available) {
+                                                connect({ connector: available });
+                                            } else if (connectors.length > 0) {
+                                                connect({ connector: connectors[0] });
+                                            }
+                                        }}
+                                        className="w-full py-6 rounded-3xl bg-grinta-accent text-black font-black text-lg hover:scale-[1.03] active:scale-[0.98] transition-all shadow-xl shadow-grinta-accent/20 uppercase tracking-widest flex items-center justify-center gap-3"
+                                    >
                                         <MousePointerClick size={24} />
+                                        <span>Conectar Billetera</span>
+                                    </button>
+
+                                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-6 opacity-30 grayscale hover:grayscale-0 transition-all">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-grinta-text-secondary">Soportado:</span>
+                                        <div className="flex gap-4">
+                                            <img src="https://argent.xyz/favicon.ico" className="w-4 h-4" alt="Argent" />
+                                            <img src="https://braavos.app/favicon.ico" className="w-4 h-4" alt="Braavos" />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+
+                {step === 'fund' && (
+                    <motion.div
+                        key="fund"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="max-w-xl mx-auto"
+                    >
+                        <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-10">
+                                <Bitcoin size={120} className="text-[#F7931A]" />
+                            </div>
+
+                            <div className="mb-10 relative">
+                                <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Fondear Billetera</h2>
+                                <p className="text-grinta-text-secondary">Necesitas WBTC de prueba en Sepolia para depositar en tu vault.</p>
+                            </div>
+
+                            <div className="space-y-6 relative">
+                                {/* Current balance display */}
+                                <div className="p-6 rounded-3xl bg-black/40 border border-white/10">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-[10px] font-bold text-grinta-text-secondary uppercase tracking-widest mb-2">Tu Balance Actual</div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-white">{wbtcBalanceDisplay}</span>
+                                                <span className="text-sm font-bold text-grinta-text-secondary">WBTC</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-[#F7931A]/10 text-[#F7931A]">
+                                            <Bitcoin size={32} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mint button */}
+                                <button
+                                    onClick={async () => {
+                                        if (!address || isPending) return;
+                                        setIsProcessing(true);
+                                        setTxStatus(null);
+                                        try {
+                                            const amt = 100_000_000n;
+                                            await sendAsync([{
+                                                contractAddress: config.wbtcAddress,
+                                                entrypoint: 'mint',
+                                                calldata: [address, `0x${amt.toString(16)}`, '0x0']
+                                            }]);
+                                            setTxStatus('Mint exitoso! +1 WBTC');
+                                            setTimeout(() => refetchBalance(), 2000);
+                                        } catch (e) {
+                                            setTxStatus(`Error: ${(e as Error).message}`);
+                                        } finally {
+                                            setIsProcessing(false);
+                                        }
+                                    }}
+                                    disabled={isProcessing || isPending}
+                                    className="w-full py-6 rounded-3xl bg-[#F7931A] text-black font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#F7931A]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                >
+                                    {isProcessing || isPending ? (
+                                        <><Loader2 size={20} className="animate-spin" /> Procesando...</>
+                                    ) : (
+                                        <><Bitcoin size={20} /> Mintear 1 WBTC (Sepolia Faucet)</>
+                                    )}
+                                </button>
+
+                                {txStatus && (
+                                    <div className={`p-4 rounded-xl border text-xs font-bold tracking-wide text-center ${txStatus.includes('Error') ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-grinta-accent/10 border-grinta-accent/20 text-grinta-accent'}`}>
+                                        {txStatus}
+                                    </div>
+                                )}
+
+                                <div className="p-5 rounded-3xl bg-grinta-accent/5 border border-grinta-accent/10 flex items-start gap-4">
+                                    <div className="p-2 rounded-xl bg-grinta-accent/10 text-grinta-accent">
+                                        <ShieldCheck size={20} />
                                     </div>
                                     <div>
-                                        <div className="text-white font-bold uppercase tracking-wider text-xs">Conectar con</div>
-                                        <div className="text-grinta-text-secondary text-base font-medium">{connector.id}</div>
+                                        <h4 className="text-white font-bold text-xs mb-1 uppercase tracking-wider">Red de Prueba</h4>
+                                        <p className="text-grinta-text-secondary text-[11px] leading-relaxed">
+                                            Estos WBTC son tokens de prueba en Sepolia sin valor real. Puedes mintear cuantos necesites.
+                                        </p>
                                     </div>
-                                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ArrowRight size={20} className="text-grinta-accent" />
-                                    </div>
+                                </div>
+
+                                {/* Continue to deposit */}
+                                <button
+                                    onClick={() => { setTxStatus(null); setStep('deposit'); refetchBalance(); }}
+                                    disabled={wbtcBalance === 0n}
+                                    className={`w-full py-5 rounded-3xl flex items-center justify-center gap-3 font-black text-sm transition-all uppercase tracking-widest ${wbtcBalance > 0n
+                                        ? 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+                                        : 'bg-white/5 text-white/20 cursor-not-allowed'
+                                        }`}
+                                >
+                                    Continuar al Depósito <ArrowRight size={18} />
                                 </button>
-                            ))}
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -355,11 +511,13 @@ export default function NewVaultFlow() {
                                     </div>
                                 </div>
 
+
                                 {txStatus && (
                                     <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold tracking-wide">
                                         {txStatus}
                                     </div>
                                 )}
+
 
                                 <button
                                     disabled={!depositValid || isProcessing || isPending}
@@ -530,73 +688,90 @@ export default function NewVaultFlow() {
                                             <div className={`text-[10px] font-bold ${stat.up ? 'text-grinta-accent' : 'text-grinta-text-secondary'} flex items-center gap-1`}>
                                                 {stat.up && <TrendingUp size={10} />} {stat.sub}
                                             </div>
-                                            {stat.label === 'Valor Total Vault' && (
-                                                <div className="mt-6 pt-6 border-t border-white/5">
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <h3 className="text-xs font-bold text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
-                                                            <Settings size={16} className={activeVault.type === 'agentic' ? 'text-grinta-accent' : 'text-orange-500'} />
-                                                            Acciones de Control L2
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 px-3 py-1 bg-black/40 border border-white/10 rounded-lg">
-                                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">Monedero:</span>
-                                                            <span className="text-xs font-bold text-grinta-accent">{wbtcBalanceDisplay} BTC</span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Amount Input */}
-                                                    <div className="mb-4">
-                                                        <input
-                                                            type="text"
-                                                            inputMode="decimal"
-                                                            value={actionAmount}
-                                                            onChange={(e) => {
-                                                                if (/^\d*\.?\d*$/.test(e.target.value)) setActionAmount(e.target.value);
-                                                            }}
-                                                            className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xl font-bold text-white placeholder:text-white/20 outline-none hover:border-white/20 focus:border-white/30 transition-colors"
-                                                            placeholder="0.00 WBTC / GRIT"
-                                                        />
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 gap-3 mb-6">
-                                                        <button
-                                                            onClick={() => handleVaultAction('deposit')}
-                                                            disabled={isPending}
-                                                            className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-grinta-accent/50 transition-all text-xs font-black uppercase tracking-widest group"
-                                                        >
-                                                            <Download size={16} className="text-grinta-accent group-hover:scale-110 transition-transform" /> Deposit WBTC
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleVaultAction('withdraw')}
-                                                            disabled={activeVault.amount === 0 || isPending}
-                                                            className={`flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all text-xs font-black uppercase tracking-widest group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-red-500/50'}`}
-                                                        >
-                                                            <RefreshCcw size={16} className="text-red-500 group-hover:rotate-180 transition-transform duration-500" /> Withdraw WBTC
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleVaultAction('borrow')}
-                                                            disabled={activeVault.amount === 0 || isPending}
-                                                            className={`flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all text-xs font-black uppercase tracking-widest group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-orange-500/50'}`}
-                                                        >
-                                                            <Layers size={16} className="text-orange-500 group-hover:translate-x-1 transition-transform" /> Borrow GRIT
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleVaultAction('repay')}
-                                                            disabled={activeVault.debt === 0 || isPending}
-                                                            className={`flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all text-xs font-black uppercase tracking-widest group ${activeVault.debt === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500/50'}`}
-                                                        >
-                                                            <Zap size={16} className="text-blue-500 group-hover:scale-110 transition-transform" /> Repay GRIT
-                                                        </button>
-                                                    </div>
-
-                                                    {actionTxStatus && (
-                                                        <div className="p-3 rounded-xl bg-grinta-accent/10 border border-grinta-accent/20 text-[10px] font-bold text-grinta-accent uppercase tracking-widest text-center animate-pulse">
-                                                            {actionTxStatus}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
                                         </div>
                                     ))}
+                                </div>
+
+                                {/* Actions Card - Separated for better layout balance */}
+                                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 hover:border-white/20 transition-all">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-2xl bg-black/40 border border-white/10 ${activeVault.type === 'agentic' ? 'text-grinta-accent' : 'text-orange-500'}`}>
+                                                <Layers size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest">Acciones de Control L2</h3>
+                                                <p className="text-[10px] text-grinta-text-secondary font-bold uppercase tracking-widest opacity-60">Gestión directa de colateral y deuda</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
+                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">Monedero:</span>
+                                            <span className="text-xs font-bold text-grinta-accent">{wbtcBalanceDisplay} BTC</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                                        {/* Amount Input */}
+                                        <div className="md:col-span-12">
+                                            <div className="relative group">
+                                                <input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    value={actionAmount}
+                                                    onChange={(e) => {
+                                                        if (/^\d*\.?\d*$/.test(e.target.value)) setActionAmount(e.target.value);
+                                                    }}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-3xl p-6 text-3xl font-bold text-white placeholder:text-white/10 outline-none hover:border-white/20 focus:border-grinta-accent/30 transition-all pr-24"
+                                                    placeholder="0.00"
+                                                />
+                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-white/20 uppercase tracking-widest">
+                                                    WBTC / GRIT
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons Grid */}
+                                        <div className="md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                            <button
+                                                onClick={() => handleVaultAction('deposit')}
+                                                disabled={isPending}
+                                                className="flex flex-col items-center justify-center gap-3 p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-grinta-accent/50 hover:bg-grinta-accent/5 transition-all group"
+                                            >
+                                                <Download size={20} className="text-grinta-accent group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Deposit WBTC</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleVaultAction('withdraw')}
+                                                disabled={activeVault.amount === 0 || isPending}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-red-500/50 hover:bg-red-500/5'}`}
+                                            >
+                                                <RefreshCcw size={20} className="text-red-500 group-hover:rotate-180 transition-transform duration-500" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Withdraw WBTC</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleVaultAction('borrow')}
+                                                disabled={activeVault.amount === 0 || isPending}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/5'}`}
+                                            >
+                                                <Layers size={20} className="text-orange-500 group-hover:translate-x-1 transition-transform" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Borrow GRIT</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleVaultAction('repay')}
+                                                disabled={activeVault.debt === 0 || isPending}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.debt === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed' : 'bg-white/5 border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5'}`}
+                                            >
+                                                <Zap size={20} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Repay GRIT</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {actionTxStatus && (
+                                        <div className="mt-6 p-4 rounded-2xl bg-grinta-accent/5 border border-grinta-accent/10 text-[10px] font-bold text-grinta-accent uppercase tracking-[0.2em] text-center animate-pulse">
+                                            {actionTxStatus}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 min-h-[400px]">

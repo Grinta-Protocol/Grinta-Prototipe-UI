@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
-export type Step = 'connect' | 'deposit' | 'create_vault' | 'vault_view' | 'main_dashboard';
+export type Step = 'connect' | 'fund' | 'deposit' | 'create_vault' | 'vault_view' | 'main_dashboard';
 
 interface LogEntry {
     id: string;
@@ -65,10 +65,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const [activeVaultId, setActiveVaultId] = useState<string | null>(null);
 
     const [market, setMarket] = useState<MarketState>({
-        btcPrice: 70266.00,
-        redemptionRate: 0.00,
-        redemptionPrice: 1.000,
-        redemptionPriceHistory: Array(20).fill(1.000),
+        btcPrice: 0,
+        redemptionRate: 0,
+        redemptionPrice: 1.0,
+        redemptionPriceHistory: Array(20).fill(1.0),
         liquidationRatio: 150.00,
         tvl: 0.00,
         flashMints24h: 0,
@@ -81,59 +81,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const vaultsRef = useRef(vaults);
     vaultsRef.current = vaults;
 
+    // Simulation interval removed to migrate to real on-chain data.
+    // Infrastructure ready to receive real-time updates from Starknet hooks.
     useEffect(() => {
-        const interval = setInterval(() => {
-            // 1. Update BTC Price (Random Walk)
-            const btcChange = (Math.random() - 0.5) * 50;
-            const newBtcPrice = marketRef.current.btcPrice + btcChange;
-
-            // 2. Update Redemption Rate (PID Simulation)
-            const rateChange = (Math.random() - 0.5) * 0.02;
-            const newRedemptionRate = Math.max(-0.5, Math.min(0.5, marketRef.current.redemptionRate + rateChange));
-            const newRedemptionPrice = marketRef.current.redemptionPrice * (1 + (newRedemptionRate / 10000));
-
-            // 4. Update TVL (Incremental Growth)
-            const newTvl = marketRef.current.tvl + (Math.random() * 0.1);
-
-            // 5. Update Daily Metrics
-            const newFlashMints24h = marketRef.current.flashMints24h + (Math.random() > 0.7 ? 1 : 0);
-            const newArbitrageVol = marketRef.current.arbitrageVol + (Math.random() * 0.001);
-
-            setMarket({
-                btcPrice: newBtcPrice,
-                redemptionRate: newRedemptionRate,
-                redemptionPrice: newRedemptionPrice,
-                redemptionPriceHistory: [...marketRef.current.redemptionPriceHistory.slice(1), newRedemptionPrice],
-                liquidationRatio: 150.00,
-                tvl: newTvl,
-                flashMints24h: newFlashMints24h,
-                arbitrageVol: newArbitrageVol
-            });
-
-            setVaults(prevVaults => prevVaults.map(vault => {
-                if (vault.type === 'manual') return vault;
-
-                const yieldIncrement = (vault.amount * (vault.apy / 100)) / (365 * 24 * 60 * 20);
-                const newYield = vault.yieldEarned + yieldIncrement;
-                let newAgentActions = vault.agentActions;
-                let newFlashMints = vault.flashMints;
-                let newLogs = [...vault.logs];
-
-                if (Math.random() < 0.4) {
-                    newAgentActions += 1;
-                    newLogs.push({ id: Math.random().toString(36).substr(2, 9), message: `Arbitraje Exitoso: +0.00005 BTC`, timestamp: new Date(), type: 'agent' });
-                }
-                if (Math.random() < 0.2) {
-                    newFlashMints += 1;
-                    newLogs.push({ id: Math.random().toString(36).substr(2, 9), message: "Flash-Mint Ejecutado", timestamp: new Date(), type: 'success' });
-                }
-                if (newLogs.length > 20) newLogs = newLogs.slice(-20);
-
-                return { ...vault, yieldEarned: newYield, agentActions: newAgentActions, flashMints: newFlashMints, logs: newLogs };
-            }));
-        }, 3000);
-
-        return () => clearInterval(interval);
+        // Initial protocol data fetching will be implemented here
     }, []);
 
     const addVault = (vault: Vault) => {

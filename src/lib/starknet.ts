@@ -1,7 +1,5 @@
 import { RpcProvider, Contract, num } from "starknet";
 import { config } from "../config/contracts";
-import { SAFE_MANAGER_ABI } from "./abi/safe-manager";
-import { SAFE_ENGINE_ABI } from "./abi/safe-engine";
 
 const WAD = 10n ** 18n;
 const RAY = 10n ** 27n;
@@ -9,20 +7,13 @@ const WAD_DECIMALS = 18;
 const RAY_DECIMALS = 27;
 const WBTC_DECIMALS = 8;
 
-const WBTC_ABI = [
-  {
-    type: "function",
-    name: "balance_of",
-    inputs: [{ name: "account", type: "core::starknet::contract_address::ContractAddress" }],
-    outputs: [{ type: "core::integer::u256" }],
-    state_mutability: "view",
-  },
-];
-
 let _provider: RpcProvider | undefined;
 let _safeManager: Contract | undefined;
 let _safeEngine: Contract | undefined;
 let _wbtcContract: Contract | undefined;
+let _pidController: Contract | undefined;
+let _grintaHook: Contract | undefined;
+let _collateralJoin: Contract | undefined;
 
 export function getProvider(): RpcProvider {
   if (!_provider) {
@@ -34,9 +25,9 @@ export function getProvider(): RpcProvider {
 export function getSafeManager(): Contract {
   if (!_safeManager) {
     _safeManager = new Contract({
-      abi: SAFE_MANAGER_ABI as any,
+      abi: config.abis.safeManager,
       address: config.safeManagerAddress,
-      provider: getProvider(),
+      providerOrAccount: getProvider(),
     });
   }
   return _safeManager;
@@ -45,9 +36,9 @@ export function getSafeManager(): Contract {
 export function getSafeEngine(): Contract {
   if (!_safeEngine) {
     _safeEngine = new Contract({
-      abi: SAFE_ENGINE_ABI as any,
+      abi: config.abis.safeEngine,
       address: config.safeEngineAddress,
-      provider: getProvider(),
+      providerOrAccount: getProvider(),
     });
   }
   return _safeEngine;
@@ -56,12 +47,45 @@ export function getSafeEngine(): Contract {
 export function getWbtcContract(): Contract {
   if (!_wbtcContract) {
     _wbtcContract = new Contract({
-      abi: WBTC_ABI as any,
+      abi: config.abis.erc20,
       address: config.wbtcAddress,
-      provider: getProvider(),
+      providerOrAccount: getProvider(),
     });
   }
   return _wbtcContract;
+}
+
+export function getPidController(): Contract {
+  if (!_pidController) {
+    _pidController = new Contract({
+      abi: config.abis.pidController,
+      address: config.pidControllerAddress,
+      providerOrAccount: getProvider(),
+    });
+  }
+  return _pidController;
+}
+
+export function getGrintaHook(): Contract {
+  if (!_grintaHook) {
+    _grintaHook = new Contract({
+      abi: config.abis.grintaHook,
+      address: config.grintaHookAddress,
+      providerOrAccount: getProvider(),
+    });
+  }
+  return _grintaHook;
+}
+
+export function getCollateralJoin(): Contract {
+  if (!_collateralJoin) {
+    _collateralJoin = new Contract({
+      abi: config.abis.collateralJoin,
+      address: config.collateralJoinAddress,
+      providerOrAccount: getProvider(),
+    });
+  }
+  return _collateralJoin;
 }
 
 export function formatBtcAmount(value: bigint): string {

@@ -9,7 +9,7 @@ export default function Sidebar() {
   const { isConnected } = useAccount();
   const { step, setStep, startNewFlow, balanceL2, vaults } = useVaults();
 
-  const isFlowActive = ['connect', 'deposit', 'create_vault'].includes(step);
+  const isFlowActive = ['connect', 'fund', 'deposit', 'create_vault'].includes(step);
 
   const handleNavigation = (e: React.MouseEvent, path: string) => {
     if (step === 'vault_view') {

@@ -1,3 +1,12 @@
+import {
+  SAFE_ENGINE_ABI,
+  SAFE_MANAGER_ABI,
+  PID_CONTROLLER_ABI,
+  GRINTA_HOOK_ABI,
+  COLLATERAL_JOIN_ABI,
+  ERC20_ABI
+} from '../lib/abi/contracts-abi';
+
 export interface GrintaConfig {
   rpcUrl: string;
   safeManagerAddress: string;
@@ -7,6 +16,14 @@ export interface GrintaConfig {
   wbtcAddress: string;
   pidControllerAddress: string;
   grintaHookAddress: string;
+  abis: {
+    safeEngine: any;
+    safeManager: any;
+    pidController: any;
+    grintaHook: any;
+    collateralJoin: any;
+    erc20: any;
+  };
 }
 
 export const config: GrintaConfig = {
@@ -18,4 +35,12 @@ export const config: GrintaConfig = {
   wbtcAddress: import.meta.env.VITE_WBTC_ADDRESS || '0x04ab76b407a4967de3683d387c598188d436d22d51416e8c8783156625874e20',
   pidControllerAddress: import.meta.env.VITE_PID_CONTROLLER_ADDRESS || '0x01cae0b0de880d26d09a52a4c6e33dcd189fa1bcf40986103d3c3eb46a66eec5',
   grintaHookAddress: import.meta.env.VITE_GRINTA_HOOK_ADDRESS || '0x07a17830f3aecf5a22ecfea9f3f88cb6eafd9abc425505b167755e21246d9b14',
+  abis: {
+    safeEngine: SAFE_ENGINE_ABI,
+    safeManager: SAFE_MANAGER_ABI,
+    pidController: PID_CONTROLLER_ABI,
+    grintaHook: GRINTA_HOOK_ABI,
+    collateralJoin: COLLATERAL_JOIN_ABI,
+    erc20: ERC20_ABI,
+  }
 };
