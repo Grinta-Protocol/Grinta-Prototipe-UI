@@ -102,7 +102,7 @@ export default function Sidebar() {
         </Link>
 
         <a
-          href="https://x.com/intent/post?text=@GrintaProtocol%20Feedback:%20&url=https://x.com/reflecterlabs/status/2030450172182909259&hashtags=GrintaProtocol,Starknet,BTCFi"
+          href="https://x.com/intent/post?text=Grinta%20seems%20to%20me%20something...%20&url=https://x.com/reflecterlabs/status/2030450172182909259&hashtags=GrintaProtocol,Starknet,BTCFi"
           target="_blank"
           rel="noopener noreferrer"
           className="block p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-grinta-accent/30 hover:bg-white/10 transition-all group"
