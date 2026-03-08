@@ -28,8 +28,18 @@ export default function MyVaults() {
     }
 
     return (
-        <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex items-center justify-between mb-2">
+        <div className="w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Header Section */}
+            <div className="px-2 pt-6">
+                <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-3 leading-none">{t('overview.vault_operations_title')}</h1>
+                <p className="text-grinta-text-secondary text-base max-w-2xl font-medium leading-relaxed opacity-80">
+                    {t('overview.vault_operations_desc')}
+                </p>
+            </div>
+
+            <div className="h-2"></div>
+
+            <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white uppercase tracking-widest">{t('dashboard.active_vaults')}</h2>
                 <span className="px-3 py-1 rounded-full bg-grinta-accent/10 border border-grinta-accent/20 text-grinta-accent text-[10px] font-bold">
                     {vaults.length} {t('dashboard.operating')}

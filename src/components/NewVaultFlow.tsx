@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { Wallet, ArrowRight, Download, PlusCircle, CheckCircle2, TrendingUp, Zap, Activity, Loader2, Bitcoin, Clock, ShieldCheck, Bot, LayoutDashboard, User, Settings, MousePointerClick, RefreshCcw, Layers } from 'lucide-react';
@@ -11,6 +12,7 @@ import WalletConnect from './WalletConnect';
 
 export default function NewVaultFlow() {
     const { step, setStep, vaults, addVault, setActiveVaultId, activeVaultId, depositToVault, withdrawFromVault, borrowGrit, repayGrit } = useVaults();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const [isProcessing, setIsProcessing] = useState(false);
     const [depositAmount, setDepositAmount] = useState('');
@@ -20,21 +22,19 @@ export default function NewVaultFlow() {
     const [createdSafeId, setCreatedSafeId] = useState<number | null>(null);
     const [actionAmount, setActionAmount] = useState('');
     const [actionTxStatus, setActionTxStatus] = useState<string | null>(null);
+    const [activeActionMode, setActiveActionMode] = useState<'deposit' | 'withdraw' | 'borrow' | 'repay'>('deposit');
 
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
     const { sendAsync, isPending } = useSendTransaction({});
     const { balance: wbtcBalance, isLoading: balanceLoading, refetch: refetchBalance } = useWbtcBalance();
     const rates = useRates();
-
-    // Cálculo dinámico de Max Borrow según fórmula de protocolo
-    // max_prestamo = (valor_colateral / tasa_liquidacion) * RAY / precio_redencion
-    const currentVault = vaults.find(v => v.id === activeVaultId);
+    const currentVault = useMemo(() => vaults.find(v => v.id === activeVaultId), [vaults, activeVaultId]);
     const activeVault = currentVault;
-    let maxGritBorrow = 0n;
-    let maxGritBorrowStr = "0.00";
 
-    if (currentVault && !rates.loading) {
+    // Cálculo dinámico de Max Borrow según fórmula de protocolo (Memoizado para performance)
+    const { maxGritBorrow, maxGritBorrowStr } = useMemo(() => {
+        if (!currentVault || rates.loading) return { maxGritBorrow: 0n, maxGritBorrowStr: "0.00" };
         try {
             const btcRaw = parseBtcAmount(currentVault.amount.toFixed(8));
             const priceBtc = rates.collateralPriceRaw;
@@ -44,15 +44,15 @@ export default function NewVaultFlow() {
             if (liqRatio > 0n && redPrice > 0n) {
                 const collatValueWad = (btcRaw * priceBtc) / (10n ** 8n);
                 const maxDebtWad = (collatValueWad * (10n ** 18n)) / liqRatio;
-                maxGritBorrow = (maxDebtWad * (10n ** 27n)) / redPrice;
-                // Restamos un pequeño margen para mayor seguridad en la TX
-                maxGritBorrow = (maxGritBorrow * 99n) / 100n;
-                maxGritBorrowStr = formatWad(maxGritBorrow);
+                let max = (maxDebtWad * (10n ** 27n)) / redPrice;
+                max = (max * 99n) / 100n; // Safety margin
+                return { maxGritBorrow: max, maxGritBorrowStr: formatWad(max) };
             }
         } catch (e) {
             console.error("Error calculating max borrow:", e);
         }
-    }
+        return { maxGritBorrow: 0n, maxGritBorrowStr: "0.00" };
+    }, [currentVault, rates.loading, rates.collateralPriceRaw, rates.liquidationRatioRaw, rates.redemptionPriceRaw]);
 
     // Navigation safety: ask before leaving
     useEffect(() => {
@@ -124,8 +124,8 @@ export default function NewVaultFlow() {
         connect({ connector });
     };
 
-    // Deposit step: open_safe + approve + deposit in one multicall tx
-    const handleDeposit = async () => {
+    // Memoized Handlers for Speed
+    const handleDeposit = useCallback(async () => {
         if (!address || isPending) return;
         const parsedAmount = parseBtcAmount(depositAmount || '0');
         if (parsedAmount <= 0n || parsedAmount > wbtcBalance) return;
@@ -163,7 +163,7 @@ export default function NewVaultFlow() {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }, [address, isPending, depositAmount, wbtcBalance, sendAsync]);
 
     // Strategy step: registers the vault in app state (tx already done)
     const handleCreateVault = () => {
@@ -680,7 +680,10 @@ export default function NewVaultFlow() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setStep('main_dashboard')}
+                                    onClick={() => {
+                                        setStep('main_dashboard');
+                                        navigate('/app/vaults');
+                                    }}
                                     className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition-all uppercase tracking-widest flex items-center gap-2"
                                 >
                                     <LayoutDashboard size={16} /> {t('new_vault.vault_view.my_vaults')}
@@ -691,51 +694,102 @@ export default function NewVaultFlow() {
                             </div>
                         </div>
 
-                        {/* Main Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            {/* Left Column: Stats */}
-                            <div className="md:col-span-8 space-y-6">
-                                <div className="grid grid-cols-3 gap-4">
-                                    {[
-                                        { label: t('new_vault.vault_view.total_value'), val: (activeVault.amount + activeVault.yieldEarned).toFixed(4), unit: 'WBTC', sub: `≈ $${((activeVault.amount + activeVault.yieldEarned) * 70266).toLocaleString()}` },
-                                        { label: t('new_vault.vault_view.accumulated_yield'), val: activeVault.yieldEarned.toFixed(6), unit: 'WBTC', sub: `APY: ${activeVault.apy}%`, up: true },
-                                        { label: t('new_vault.vault_view.max_debt'), val: parseFloat(maxGritBorrowStr).toFixed(2), unit: 'GRIT', sub: `LTV: ${((activeVault.debt / (parseFloat(maxGritBorrowStr) || 1)) * 100).toFixed(2)}%` }
-                                    ].map((stat, i) => (
-                                        <div key={i} className="bg-white/5 border border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all relative group overflow-hidden">
-                                            <div className="text-grinta-text-secondary text-[10px] font-black uppercase tracking-widest mb-3">{stat.label}</div>
-                                            <div className="flex items-baseline gap-2 mb-1">
-                                                <div className="text-2xl font-black text-white font-syncopate">{stat.val}</div>
-                                                <div className="text-xs font-bold text-grinta-text-secondary">{stat.unit}</div>
-                                            </div>
-                                            <div className={`text-[10px] font-bold ${stat.up ? 'text-grinta-accent' : 'text-grinta-text-secondary'} flex items-center gap-1`}>
-                                                {stat.up && <TrendingUp size={10} />} {stat.sub}
-                                            </div>
+                        {/* Main Layout Container */}
+                        <div className="max-w-5xl mx-auto space-y-6">
+                            {/* Stats Layer */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {[
+                                    { label: t('new_vault.vault_view.total_value'), val: (activeVault.amount + activeVault.yieldEarned).toFixed(4), unit: 'WBTC', sub: `≈ $${((activeVault.amount + activeVault.yieldEarned) * 70266).toLocaleString()}` },
+                                    { label: t('new_vault.vault_view.accumulated_yield'), val: activeVault.yieldEarned.toFixed(6), unit: 'WBTC', sub: `APY: ${activeVault.apy}%`, up: true },
+                                    { label: t('new_vault.vault_view.max_debt'), val: parseFloat(maxGritBorrowStr).toFixed(2), unit: 'GRIT', sub: `LTV: ${((activeVault.debt / (parseFloat(maxGritBorrowStr) || 1)) * 100).toFixed(2)}%` }
+                                ].map((stat, i) => (
+                                    <div key={i} className="bg-white/5 border border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all relative group overflow-hidden">
+                                        <div className="text-grinta-text-secondary text-[10px] font-black uppercase tracking-widest mb-3">{stat.label}</div>
+                                        <div className="flex items-baseline gap-2 mb-1">
+                                            <div className="text-2xl font-black text-white font-syncopate">{stat.val}</div>
+                                            <div className="text-xs font-bold text-grinta-text-secondary">{stat.unit}</div>
                                         </div>
-                                    ))}
-                                </div>
-
-                                {/* Actions Card - Separated for better layout balance */}
-                                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 hover:border-white/20 transition-all">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-3 rounded-2xl bg-black/40 border border-white/10 ${activeVault.type === 'agentic' ? 'text-grinta-accent' : 'text-orange-500'}`}>
-                                                <Layers size={24} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest">{t('new_vault.vault_view.l2_actions')}</h3>
-                                                <p className="text-[10px] text-grinta-text-secondary font-bold uppercase tracking-widest opacity-60">{t('new_vault.vault_view.l2_desc')}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
-                                            <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">{t('new_vault.vault_view.wallet')}:</span>
-                                            <span className="text-xs font-bold text-grinta-accent">{wbtcBalanceDisplay} BTC</span>
+                                        <div className={`text-[10px] font-bold ${stat.up ? 'text-grinta-accent' : 'text-grinta-text-secondary'} flex items-center gap-1`}>
+                                            {stat.up && <TrendingUp size={10} />} {stat.sub}
                                         </div>
                                     </div>
+                                ))}
+                            </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                                        {/* Amount Input */}
-                                        <div className="md:col-span-12">
-                                            <div className="relative group">
+                            {/* Actions Card - Separated for better layout balance */}
+                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 hover:border-white/20 transition-all">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-3 rounded-2xl bg-black/40 border border-white/10 ${activeVault.type === 'agentic' ? 'text-grinta-accent' : 'text-orange-500'}`}>
+                                            <Layers size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest">{t('new_vault.vault_view.l2_actions')}</h3>
+                                            <p className="text-[10px] text-grinta-text-secondary font-bold uppercase tracking-widest opacity-60">{t('new_vault.vault_view.l2_desc')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-xl">
+                                        <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">{t('new_vault.vault_view.wallet')}:</span>
+                                        <span className="text-xs font-bold text-grinta-accent">{wbtcBalanceDisplay} BTC</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Action Mode Selector */}
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {[
+                                            { id: 'withdraw', label: t('new_vault.vault_view.withdraw'), icon: RefreshCcw, color: 'text-white', activeBg: 'bg-white/10' },
+                                            { id: 'borrow', label: t('new_vault.vault_view.borrow'), icon: Layers, color: 'text-grinta-accent', activeBg: 'bg-grinta-accent/10' },
+                                            { id: 'deposit', label: t('new_vault.vault_view.deposit'), icon: Download, color: 'text-grinta-text-secondary', activeBg: 'bg-white/10' },
+                                            { id: 'repay', label: t('new_vault.vault_view.repay'), icon: Zap, color: 'text-white', activeBg: 'bg-blue-500/10' }
+                                        ].map((mode) => (
+                                            <button
+                                                key={mode.id}
+                                                onClick={() => {
+                                                    setActiveActionMode(mode.id as any);
+                                                    setActionAmount('');
+                                                    setActionTxStatus(null);
+                                                }}
+                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group relative overflow-hidden ${activeActionMode === mode.id
+                                                    ? `${mode.activeBg} border-grinta-accent shadow-[0_0_15px_rgba(0,255,65,0.05)]`
+                                                    : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                                            >
+                                                <mode.icon size={20} className={`${mode.color} ${activeActionMode === mode.id ? 'scale-110' : 'opacity-40'} transition-all`} />
+                                                <span className={`text-[9px] font-black uppercase tracking-widest ${activeActionMode === mode.id ? 'text-white' : 'text-grinta-text-secondary'}`}>{mode.label}</span>
+                                                {activeActionMode === mode.id && (
+                                                    <motion.div layoutId="modeIndicator" className="absolute bottom-0 left-0 right-0 h-1 bg-grinta-accent" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Input & Execute Action */}
+                                    <div className="bg-black/40 border border-white/10 rounded-[40px] p-8 space-y-6">
+                                        <div className="flex items-center justify-between px-2">
+                                            <span className="text-[10px] font-black text-grinta-text-secondary uppercase tracking-[0.2em]">
+                                                {activeActionMode === 'deposit' ? t('new_vault.vault_view.deposit') :
+                                                    activeActionMode === 'withdraw' ? t('new_vault.vault_view.withdraw') :
+                                                        activeActionMode === 'borrow' ? t('new_vault.vault_view.borrow') :
+                                                            t('new_vault.vault_view.repay')} Amount
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] font-bold text-grinta-text-secondary uppercase">
+                                                    {activeActionMode === 'deposit' ? t('new_vault.deposit.available') :
+                                                        activeActionMode === 'withdraw' ? 'Staked' :
+                                                            activeActionMode === 'borrow' ? 'Max Borrow' :
+                                                                'Debt'}:
+                                                </span>
+                                                <span className="text-[10px] font-black text-white">
+                                                    {activeActionMode === 'deposit' ? `${wbtcBalanceDisplay} BTC` :
+                                                        activeActionMode === 'withdraw' ? `${activeVault.amount.toFixed(4)} BTC` :
+                                                            activeActionMode === 'borrow' ? `${parseFloat(maxGritBorrowStr).toFixed(2)} GRIT` :
+                                                                `${(activeVault.debt || 0).toFixed(2)} GRIT`}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+                                            <div className="md:col-span-8 relative">
                                                 <input
                                                     type="text"
                                                     inputMode="decimal"
@@ -743,171 +797,150 @@ export default function NewVaultFlow() {
                                                     onChange={(e) => {
                                                         if (/^\d*\.?\d*$/.test(e.target.value)) setActionAmount(e.target.value);
                                                     }}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-3xl p-6 text-3xl font-bold text-white placeholder:text-white/10 outline-none hover:border-white/20 focus:border-grinta-accent/30 transition-all pr-24"
+                                                    className="w-full bg-black/60 border border-white/5 rounded-2xl p-6 text-3xl font-bold text-white placeholder:text-white/5 outline-none focus:border-grinta-accent/20 transition-all pr-24"
                                                     placeholder="0.00"
                                                 />
-                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => setActionAmount(maxGritBorrowStr)}
-                                                        className="text-[10px] font-black text-grinta-accent hover:text-white transition-colors bg-grinta-accent/10 px-2 py-1 rounded-md"
-                                                    >
-                                                        {t('new_vault.vault_view.max_borrow')}
-                                                    </button>
-                                                    <span className="text-sm font-black text-white/20 uppercase tracking-widest">
-                                                        WBTC / GRIT
-                                                    </span>
-                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        if (activeActionMode === 'deposit') setActionAmount(wbtcBalanceDisplay);
+                                                        else if (activeActionMode === 'withdraw') setActionAmount(activeVault.amount.toString());
+                                                        else if (activeActionMode === 'borrow') setActionAmount(maxGritBorrowStr);
+                                                        else if (activeActionMode === 'repay') setActionAmount(activeVault.debt.toString());
+                                                    }}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black text-grinta-text-secondary hover:text-white transition-all uppercase tracking-widest"
+                                                >
+                                                    Max
+                                                </button>
                                             </div>
+
+                                            <button
+                                                onClick={() => handleVaultAction(activeActionMode)}
+                                                disabled={!actionAmount || parseFloat(actionAmount) <= 0 || isPending ||
+                                                    (activeActionMode === 'deposit' && parseBtcAmount(actionAmount) > wbtcBalance) ||
+                                                    (activeActionMode === 'withdraw' && parseFloat(actionAmount) > activeVault.amount) ||
+                                                    (activeActionMode === 'borrow' && parseGritAmount(actionAmount) > maxGritBorrow) ||
+                                                    (activeActionMode === 'repay' && parseFloat(actionAmount) > activeVault.debt)
+                                                }
+                                                className={`md:col-span-4 rounded-2xl flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${!actionAmount || parseFloat(actionAmount) <= 0 || isPending
+                                                    ? 'bg-white/5 text-white/10 cursor-not-allowed'
+                                                    : 'bg-grinta-accent text-black hover:scale-[1.02] shadow-grinta-accent/10'
+                                                    }`}
+                                            >
+                                                {isPending ? <Loader2 className="animate-spin" size={20} /> : <Zap size={18} />}
+                                                {isPending ? 'Processing...' : 'Confirm Action'}
+                                            </button>
                                         </div>
 
-                                        {/* Action Buttons Grid */}
-                                        <div className="md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                            {/* Withdraw - Emphasized if no balance for deposit */}
-                                            <button
-                                                onClick={() => handleVaultAction('withdraw')}
-                                                disabled={activeVault.amount === 0 || isPending}
-                                                className={`relative flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent/50 hover:bg-grinta-accent/5'}`}
-                                            >
-                                                <RefreshCcw size={20} className="text-white group-hover:rotate-180 transition-transform duration-500" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">{t('new_vault.vault_view.withdraw')}</span>
-                                                {activeVault.amount > 0 && (
-                                                    <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                                        {/* Validation Messages UI */}
+                                        {actionAmount && parseFloat(actionAmount) > 0 && (
+                                            <div className="mt-2 flex justify-center">
+                                                {activeActionMode === 'deposit' && parseBtcAmount(actionAmount) > wbtcBalance && (
+                                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Insufficient Balance</span>
                                                 )}
-                                            </button>
-
-                                            {/* Borrow - Yield Generator */}
-                                            <button
-                                                onClick={() => handleVaultAction('borrow')}
-                                                disabled={activeVault.amount === 0 || isPending}
-                                                className={`relative flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.amount === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent/50 hover:bg-grinta-accent/5'}`}
-                                            >
-                                                <Layers size={20} className="text-grinta-accent group-hover:translate-x-1 transition-transform" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">{t('new_vault.vault_view.borrow')}</span>
-                                                {activeVault.amount > 0 && (
-                                                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-grinta-accent/20 border border-grinta-accent/30 flex items-center gap-1 group-hover:scale-110 transition-transform">
-                                                        <TrendingUp size={8} className="text-grinta-accent" />
-                                                        <span className="text-[7px] font-black text-grinta-accent uppercase">Yield x2</span>
-                                                    </div>
+                                                {activeActionMode === 'withdraw' && parseFloat(actionAmount) > activeVault.amount && (
+                                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Exceeds Staked Amount</span>
                                                 )}
-                                            </button>
-
-                                            {/* Deposit - Secondary if no balance */}
-                                            <button
-                                                onClick={() => handleVaultAction('deposit')}
-                                                disabled={isPending || wbtcBalance === 0n}
-                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${wbtcBalance === 0n ? 'bg-white/2 opacity-40 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-grinta-accent'}`}
-                                            >
-                                                <Download size={20} className="text-grinta-text-secondary group-hover:scale-110 transition-transform" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-grinta-text-secondary">{t('new_vault.vault_view.deposit')}</span>
-                                            </button>
-
-                                            {/* Repay */}
-                                            <button
-                                                onClick={() => handleVaultAction('repay')}
-                                                disabled={activeVault.debt === 0 || isPending}
-                                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border transition-all group ${activeVault.debt === 0 ? 'bg-white/2 opacity-20 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5'}`}
-                                            >
-                                                <Zap size={20} className="text-white group-hover:scale-110 transition-transform" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-white">{t('new_vault.vault_view.repay')}</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Faucet when no WBTC balance */}
-                                    {wbtcBalance === 0n && (
-                                        <div className="mt-6 p-5 rounded-2xl bg-[#F7931A]/5 border border-[#F7931A]/20 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <Bitcoin size={18} className="text-[#F7931A]" />
-                                                <span className="text-xs font-bold text-[#F7931A]">{t('new_vault.vault_view.no_wbtc')}</span>
-                                            </div>
-                                            <button
-                                                onClick={async () => {
-                                                    if (!address || isPending) return;
-                                                    setActionTxStatus('Minting 1 WBTC...');
-                                                    try {
-                                                        const amt = 100_000_000n;
-                                                        await sendAsync([{
-                                                            contractAddress: config.wbtcAddress,
-                                                            entrypoint: 'mint',
-                                                            calldata: [address, `0x${amt.toString(16)}`, '0x0']
-                                                        }]);
-                                                        setActionTxStatus('Mint exitoso! +1 WBTC');
-                                                        setTimeout(() => refetchBalance(), 2000);
-                                                    } catch (e) {
-                                                        setActionTxStatus(`Error: ${(e as Error).message}`);
-                                                    }
-                                                }}
-                                                disabled={isPending}
-                                                className="px-5 py-2.5 rounded-xl bg-[#F7931A] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all whitespace-nowrap disabled:opacity-50"
-                                            >
-                                                {t('new_vault.vault_view.mint_btn')}
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {actionTxStatus && (
-                                        <div className={`mt-6 p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-[0.2em] text-center animate-pulse ${actionTxStatus.includes('Error') ? 'bg-red-500/5 border-red-500/10 text-red-500' : 'bg-grinta-accent/5 border-grinta-accent/10 text-grinta-accent'}`}>
-                                            {actionTxStatus}
-                                        </div>
-                                    )}
-                                </div>
-
-
-                            </div>
-
-                            <div className="md:col-span-4 self-start h-full">
-                                {/* Consolidated Operational Log Card */}
-                                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 min-h-[600px] flex flex-col h-full sticky top-8">
-                                    <div className="flex items-center justify-between mb-8 shrink-0">
-                                        <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
-                                            <Activity size={18} className="text-grinta-accent" /> {t('new_vault.vault_view.vault_activity')}
-                                        </h3>
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full animate-pulse ${activeVault.type === 'agentic' ? 'bg-grinta-accent shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]'}`}></div>
-                                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
-                                                {activeVault.type === 'agentic' ? t('new_vault.vault_view.agent_online') : t('new_vault.vault_view.agent_manual')}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[700px]">
-                                        {activeVault.logs.length > 0 ? (
-                                            activeVault.logs.slice().reverse().map((log) => (
-                                                <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-all group">
-                                                    <div className="text-[9px] font-mono text-white/20 pt-1 shrink-0">{log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                                    <div className="flex-1">
-                                                        <div className={`text-[11px] font-bold leading-relaxed ${log.type === 'agent' ? 'text-grinta-accent' : log.type === 'success' ? 'text-green-500' : 'text-grinta-text-secondary'}`}>
-                                                            {log.message}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center py-20 text-center opacity-20 h-full">
-                                                <Activity size={40} className="mb-4" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">{t('new_vault.vault_view.waiting_txs')}</span>
+                                                {activeActionMode === 'borrow' && parseGritAmount(actionAmount) > maxGritBorrow && (
+                                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Exceeds Borrow Limit</span>
+                                                )}
+                                                {activeActionMode === 'repay' && parseFloat(actionAmount) > activeVault.debt && (
+                                                    <span className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Exceeds Current Debt</span>
+                                                )}
                                             </div>
                                         )}
                                     </div>
+                                </div>
 
-                                    {activeVault.type === 'agentic' && (
-                                        <div className="mt-8 pt-6 border-t border-white/5 text-center shrink-0">
-                                            <div className="flex justify-center gap-1 mb-3">
-                                                {Array(20).fill(0).map((_, i) => (
-                                                    <motion.div
-                                                        key={i}
-                                                        animate={{ height: [4, 12, 6, 16, 4] }}
-                                                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.08 }}
-                                                        className="w-1 h-3 bg-grinta-accent/30 rounded-full"
-                                                    />
-                                                ))}
+                                {/* Faucet when no WBTC balance */}
+                                {wbtcBalance === 0n && (
+                                    <div className="mt-6 p-5 rounded-2xl bg-[#F7931A]/5 border border-[#F7931A]/20 flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <Bitcoin size={18} className="text-[#F7931A]" />
+                                            <span className="text-xs font-bold text-[#F7931A]">{t('new_vault.vault_view.no_wbtc')}</span>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                if (!address || isPending) return;
+                                                setActionTxStatus('Minting 1 WBTC...');
+                                                try {
+                                                    const amt = 100_000_000n;
+                                                    await sendAsync([{
+                                                        contractAddress: config.wbtcAddress,
+                                                        entrypoint: 'mint',
+                                                        calldata: [address, `0x${amt.toString(16)}`, '0x0']
+                                                    }]);
+                                                    setActionTxStatus('Mint exitoso! +1 WBTC');
+                                                    setTimeout(() => refetchBalance(), 2000);
+                                                } catch (e) {
+                                                    setActionTxStatus(`Error: ${(e as Error).message}`);
+                                                }
+                                            }}
+                                            disabled={isPending}
+                                            className="px-5 py-2.5 rounded-xl bg-[#F7931A] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all whitespace-nowrap disabled:opacity-50"
+                                        >
+                                            {t('new_vault.vault_view.mint_btn')}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {actionTxStatus && (
+                                    <div className={`mt-6 p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-[0.2em] text-center animate-pulse ${actionTxStatus.includes('Error') ? 'bg-red-500/5 border-red-500/10 text-red-500' : 'bg-grinta-accent/5 border-grinta-accent/10 text-grinta-accent'}`}>
+                                        {actionTxStatus}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* VAULT ACTIVITY - Now positioned below actions */}
+                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 flex flex-col">
+                                <div className="flex items-center justify-between mb-8 shrink-0">
+                                    <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest flex items-center gap-2">
+                                        <Activity size={18} className="text-grinta-accent" /> {t('new_vault.vault_view.vault_activity')}
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full animate-pulse ${activeVault.type === 'agentic' ? 'bg-grinta-accent shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]'}`}></div>
+                                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
+                                            {activeVault.type === 'agentic' ? t('new_vault.vault_view.agent_online') : t('new_vault.vault_view.agent_manual')}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
+                                    {activeVault.logs.length > 0 ? (
+                                        activeVault.logs.slice().reverse().map((log) => (
+                                            <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-all group">
+                                                <div className="text-[9px] font-mono text-white/20 pt-1 shrink-0">{log.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                <div className="flex-1">
+                                                    <div className={`text-[11px] font-bold leading-relaxed ${log.type === 'agent' ? 'text-grinta-accent' : log.type === 'success' ? 'text-green-500' : 'text-grinta-text-secondary'}`}>
+                                                        {log.message}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p className="text-[9px] text-grinta-text-secondary font-black tracking-[0.2em] uppercase">
-                                                {t('new_vault.vault_view.agent_monitoring')}
-                                            </p>
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-10 text-center opacity-20">
+                                            <Activity size={40} className="mb-4" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{t('new_vault.vault_view.waiting_txs')}</span>
                                         </div>
                                     )}
                                 </div>
+
+                                {activeVault.type === 'agentic' && (
+                                    <div className="mt-8 pt-6 border-t border-white/5 text-center shrink-0">
+                                        <div className="flex justify-center gap-1 mb-3">
+                                            {Array(15).fill(0).map((_, i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    animate={{ height: [4, 12, 6, 16, 4] }}
+                                                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.08 }}
+                                                    className="w-1 h-3 bg-grinta-accent/30 rounded-full"
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className="text-[9px] text-grinta-text-secondary font-black tracking-[0.2em] uppercase">
+                                            {t('new_vault.vault_view.agent_monitoring')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </motion.div>

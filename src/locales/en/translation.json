@@ -12,7 +12,10 @@
     "support_desc": "Donate to support the development of Grinta Protocol.",
     "copy_address": "Copy Argent Address",
     "copied": "Address copied to clipboard!",
-    "leave_warning": "Do you want to leave? Vault creation progress will be canceled."
+    "leave_warning": "Do you want to leave? Vault creation progress will be canceled.",
+    "join_telegram": "Join Telegram",
+    "telegram_desc": "Get the latest updates and join the official Grinta community.",
+    "made_by": "Created by engineering team at"
   },
   "wallet": {
     "connect": "Connect Wallet",
@@ -55,7 +58,21 @@
     "target": "1.000 Target",
     "sys_active": "OPERATING SYSTEM",
     "sys_standby": "STANDBY",
-    "protocol_vaults_list": "Protocol Vaults List",
+    "coming_soon": "Coming Soon",
+    "action": "Action",
+    "grit": "GRIT",
+    "id": "ID",
+    "neural_dashboard_title": "Neural Dashboard",
+    "neural_dashboard_desc": "Advanced monitoring of AI agent clusters, protocol solvency, and global market liquidity.",
+    "vault_operations_title": "Vault Operations",
+    "vault_operations_desc": "Manage your automated yield strategies, collateral health, and protocol exposure.",
+    "quantum_portfolio_title": "Quantum Portfolio",
+    "quantum_portfolio_desc": "Manage your L2 assets, monitor faucet balances, and claim cross-chain protocol returns.",
+    "quantum_clusters": "Active AI Agent Clusters",
+    "performance_benchmark": "Agentic vs Manual performance benchmark",
+    "protocol_vaults_list": "My Recent Vaults",
+    "engine_latency": "Engine Latency",
+    "protocol_online": "Protocol Online",
     "total_created": "Total Vaults Created:",
     "prepared": "Real-time On-chain Execution",
     "recent_vaults": "Recent Vaults",
@@ -63,7 +80,7 @@
     "previous": "Previous",
     "prev": "Previous",
     "of": "of",
-    "scanning_vaults": "Scanning Starknet for Vaults...",
+    "scanning_vaults": "No active vaults found",
     "loading_data": "Loading real-time data..."
   },
   "new_vault": {

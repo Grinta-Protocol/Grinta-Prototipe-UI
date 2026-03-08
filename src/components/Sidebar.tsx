@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText, Github, Send, ExternalLink, Linkedin } from 'lucide-react';
 import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 import { useTranslation } from 'react-i18next';
@@ -40,12 +40,26 @@ export default function Sidebar() {
         <Link
           to="/"
           onClick={(e) => handleNavigation(e, '/')}
-          className="p-8 flex items-center hover:opacity-80 transition-opacity"
+          className="p-10 pb-6 flex items-center hover:opacity-80 transition-opacity"
         >
           <span className="text-2xl font-extrabold tracking-tighter uppercase font-syncopate text-white">Grinta</span>
         </Link>
 
-        <nav className="mt-4 px-3 space-y-1">
+        <nav className="mt-8 px-3 space-y-1">
+          <button
+            onClick={() => {
+              if (isConnected) {
+                startNewFlow();
+              } else {
+                setStep('connect');
+              }
+            }}
+            className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-grinta-accent text-black font-extrabold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_25px_rgba(74,222,128,0.3)] mb-8"
+          >
+            <PlusCircle size={20} />
+            <span>{t('sidebar.new_vault')}</span>
+          </button>
+
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.path === '/app'
@@ -58,83 +72,51 @@ export default function Sidebar() {
                 to={item.path}
                 onClick={(e) => handleNavigation(e, item.path)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                  ? 'bg-white/5 text-white'
+                  ? 'bg-white/5 text-white shadow-inner'
                   : 'text-grinta-text-secondary hover:bg-white/5 hover:text-white'
                   }`}
               >
                 <Icon size={18} className={isActive ? 'text-grinta-accent' : ''} />
-                <span className="font-medium text-sm">{item.name}</span>
+                <span className="font-bold text-sm">{item.name}</span>
               </Link>
             );
           })}
-
-          <div className="my-6 border-t border-white/5 mx-2"></div>
-
-          <button
-            onClick={() => {
-              if (isConnected) {
-                startNewFlow();
-              } else {
-                setStep('connect');
-              }
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-grinta-accent text-black font-bold text-sm hover:brightness-110 transition-all shadow-[0_0_15px_rgba(74,222,128,0.2)]"
-          >
-            <PlusCircle size={18} />
-            <span>{t('sidebar.new_vault')}</span>
-          </button>
         </nav>
       </div>
 
-      <div className="p-4 space-y-3">
-        <Link
-          to="/app/papel"
-          onClick={(e) => handleNavigation(e, '/app/papel')}
-          className="block p-4 rounded-2xl bg-[#00FF41]/10 border border-[#00FF41]/20 hover:border-[#00FF41]/50 hover:bg-[#00FF41]/20 transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <FileText size={16} className="text-[#00FF41]" />
-            <span className="text-xs font-bold text-[#00FF41] uppercase tracking-wider">{t('sidebar.official_paper')}</span>
+      <div className="p-6 mt-auto">
+        <div className="mb-4">
+          <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 mb-4">
+            <p className="text-[10px] text-grinta-text-secondary leading-relaxed font-medium">
+              {t('sidebar.made_by')}{' '}
+              <a
+                href="https://www.reflecterlabs.xyz"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-grinta-accent underline transition-colors inline-flex items-center gap-0.5"
+              >
+                Reflecter Labs <ExternalLink size={8} />
+              </a>
+            </p>
           </div>
-          <p className="text-[11px] text-gray-400 leading-tight">
-            {t('sidebar.official_paper_desc')}
-          </p>
-        </Link>
 
-        <a
-          href="https://x.com/intent/post?text=Grinta%20seems%20to%20me%20something...%20&url=https://x.com/reflecterlabs/status/2030450172182909259&hashtags=GrintaProtocol,Starknet,BTCFi"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-grinta-accent/30 hover:bg-white/10 transition-all group"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <Twitter size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
-            <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.feedback')}</span>
+          <div className="flex items-center justify-between px-2">
+            <a href="https://github.com/reflecterlabs" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 text-grinta-text-secondary hover:text-white hover:bg-white/10 transition-all">
+              <Github size={16} />
+            </a>
+            <a href="https://x.com/reflecterlabs" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 text-grinta-text-secondary hover:text-white hover:bg-white/10 transition-all">
+              <Twitter size={16} />
+            </a>
+            <a href="https://t.me/reflecterlabsproducts/1" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 text-grinta-text-secondary hover:text-white hover:bg-white/10 transition-all">
+              <Send size={16} />
+            </a>
+            <a href="https://www.linkedin.com/company/reflecterlabslat" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 text-grinta-text-secondary hover:text-white hover:bg-white/10 transition-all">
+              <Linkedin size={16} />
+            </a>
           </div>
-          <p className="text-[11px] text-grinta-text-secondary leading-tight">
-            {t('sidebar.feedback_desc')}
-          </p>
-        </a>
-
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-grinta-accent/30 transition-all group">
-          <div className="flex items-center gap-3 mb-2">
-            <Disc size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
-            <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.support')}</span>
-          </div>
-          <p className="text-[11px] text-grinta-text-secondary leading-tight mb-3">
-            {t('sidebar.support_desc')}
-          </p>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText('0x038d8939cb8b6f293630d3bfa90e8e097cfe16a03ee2c7186c5f597cbdac9c70');
-              alert(t('sidebar.copied'));
-            }}
-            className="w-full py-2 bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white group-hover:bg-grinta-accent group-hover:text-black group-hover:border-grinta-accent transition-colors uppercase"
-          >
-            {t('sidebar.copy_address')}
-          </button>
         </div>
       </div>
+
     </aside>
   );
 }

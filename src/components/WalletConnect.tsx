@@ -23,13 +23,13 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={variant === 'nav'
-                        ? "h-10 px-6 rounded-full bg-white/5 border border-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/10 transition-all"
+                        ? "h-8 px-4 rounded-full bg-white/5 border border-white/5 text-white font-bold text-[10px] flex items-center gap-1.5 hover:bg-white/10 transition-all"
                         : "w-full py-6 rounded-3xl bg-white/5 border border-white/10 text-white font-black text-lg flex items-center justify-center gap-3"
                     }
                 >
-                    <Wallet size={variant === 'nav' ? 14 : 20} className="text-grinta-accent" />
+                    <Wallet size={variant === 'nav' ? 12 : 20} className="text-grinta-accent" />
                     <span>{shortAddress}</span>
-                    <ChevronDown size={variant === 'nav' ? 12 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={variant === 'nav' ? 10 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isOpen && (
@@ -55,13 +55,13 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={variant === 'nav'
-                    ? "h-10 px-6 rounded-full bg-grinta-accent text-black font-black text-xs uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-grinta-accent/20"
+                    ? "h-8 px-4 rounded-full bg-grinta-accent text-black font-black text-[10px] uppercase tracking-widest flex items-center gap-1.5 hover:scale-105 transition-all shadow-lg shadow-grinta-accent/20"
                     : "w-full py-6 rounded-3xl bg-grinta-accent text-black font-black text-lg uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all"
                 }
             >
-                {variant === 'nav' ? <Wallet size={14} /> : <MousePointerClick size={20} />}
+                {variant === 'nav' ? <Wallet size={12} /> : <MousePointerClick size={20} />}
                 <span>{t('wallet.connect')}</span>
-                <ChevronDown size={variant === 'nav' ? 12 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={variant === 'nav' ? 10 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (

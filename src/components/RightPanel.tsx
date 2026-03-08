@@ -1,15 +1,44 @@
-import React, { useState } from 'react';
-import { DollarSign, Percent, Bitcoin, ShieldAlert, Copy, ExternalLink, Check } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { DollarSign, Percent, Bitcoin, ShieldAlert, Copy, ExternalLink, Check, Globe, ChevronDown, FileText, Twitter, Disc, Send } from 'lucide-react';
 import { useVaults } from '../context/VaultContext';
 import { useRates } from '../hooks/useGrinta';
 import { useBitcoinPrice } from '../hooks/useBitcoinPrice';
 import { config } from '../config/contracts';
+import WalletConnect from './WalletConnect';
+import { useTranslation } from 'react-i18next';
 
 export default function RightPanel() {
+  const { t, i18n } = useTranslation();
+  const [langOpen, setLangOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const { market } = useVaults();
   const { redemptionPrice, redemptionRate, collateralPrice, liquidationRatio, loading } = useRates();
   const { price: btcPrice } = useBitcoinPrice();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setLangOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setLangOpen(false);
+  };
+
+  const languages = [
+    { code: 'en', label: 'EN' },
+    { code: 'es', label: 'ES' },
+    { code: 'pt', label: 'PT' }
+  ];
+
+  const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
 
   const gritTokenAddress = config.gritTokenAddress;
   const shortAddress = `${gritTokenAddress.slice(0, 6)}...${gritTokenAddress.slice(-4)}`;
@@ -25,13 +54,37 @@ export default function RightPanel() {
   return (
     <div className="w-80 space-y-6 animate-in fade-in duration-1000">
 
-      {/* System Status Info */}
-      <div className="px-6 py-2 flex items-center justify-between text-[10px] font-bold text-grinta-text-secondary uppercase tracking-[0.2em]">
-        <span>System Status</span>
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-grinta-accent animate-pulse"></div>
-          <span className="text-grinta-accent">Live Simulation</span>
+      {/* Language & Wallet Cluster - Elevated z-index */}
+      <div className="flex items-center justify-between bg-grinta-bg/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 shadow-2xl w-full relative z-[60]">
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setLangOpen(!langOpen)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/5 border border-white/5 text-white font-extrabold text-[10px] hover:bg-white/10 transition-all"
+          >
+            <Globe size={12} className="text-grinta-accent" />
+            <span>{currentLang.label}</span>
+            <ChevronDown size={10} className={`transition-transform duration-200 ${langOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {langOpen && (
+            <div className="absolute top-full left-0 mt-2 w-24 bg-[#0D0F10] border border-white/10 rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl z-[70]">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  className={`w-full text-left px-4 py-2 hover:bg-white/5 rounded-xl transition-colors font-bold text-xs ${i18n.language === lang.code ? 'text-grinta-accent' : 'text-white'}`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Separator */}
+        <div className="h-4 w-[1px] bg-white/10"></div>
+
+        <WalletConnect variant="nav" />
       </div>
 
       {/* GRIT Token Highlight Card */}
@@ -62,75 +115,82 @@ export default function RightPanel() {
         </div>
       </div>
 
-      {/* Card 1: BTC Price */}
-      <div className="bg-grinta-card border border-grinta-card-border rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,255,255,0.15)] group">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-[#F7931A]/5 blur-[40px] pointer-events-none"></div>
 
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-[#F7931A] bg-black/20">
-            <Bitcoin size={20} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-grinta-text-secondary mb-1">BTC Price</div>
-            <div className="text-2xl font-bold text-white font-mono">
-              {btcFormatted}
-            </div>
-          </div>
+      {/* GRINTA OFFICIAL PAPER */}
+      <Link
+        to="/app/papel"
+        className="block p-5 rounded-[28px] bg-white/5 border border-white/5 hover:border-grinta-accent/30 hover:bg-white/10 transition-all group relative overflow-hidden shadow-lg"
+      >
+        <div className="absolute top-4 right-4 text-grinta-text-secondary group-hover:text-grinta-accent group-hover:scale-110 transition-all">
+          <ExternalLink size={16} />
         </div>
+        <div className="flex items-center gap-3 mb-2">
+          <FileText size={16} className="text-grinta-accent" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.official_paper')}</span>
+        </div>
+        <p className="text-[11px] text-grinta-text-secondary leading-tight">
+          {t('sidebar.official_paper_desc')}
+        </p>
+      </Link>
+
+      {/* FEEDBACK */}
+      <a
+        href="https://x.com/intent/post?text=Grinta%20seems%20to%20me%20something...%20&url=https://x.com/reflecterlabs/status/2030450172182909259&hashtags=GrintaProtocol,Starknet,BTCFi"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-5 rounded-[28px] bg-white/5 border border-white/5 hover:border-grinta-accent/30 hover:bg-white/10 transition-all group relative overflow-hidden shadow-lg"
+      >
+        <div className="absolute top-4 right-4 text-grinta-text-secondary group-hover:text-grinta-accent group-hover:scale-110 transition-all">
+          <Twitter size={16} />
+        </div>
+        <div className="flex items-center gap-3 mb-2">
+          <Twitter size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.feedback')}</span>
+        </div>
+        <p className="text-[11px] text-grinta-text-secondary leading-tight">
+          {t('sidebar.feedback_desc')}
+        </p>
+      </a>
+
+      {/* SUPPORT US */}
+      <div className="p-5 rounded-[28px] bg-white/5 border border-white/5 hover:border-grinta-accent/30 transition-all group relative overflow-hidden shadow-lg">
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText('0x038d8939cb8b6f293630d3bfa90e8e097cfe16a03ee2c7186c5f597cbdac9c70');
+            alert(t('sidebar.copied'));
+          }}
+          className="absolute top-4 right-4 text-grinta-text-secondary group-hover:text-grinta-accent group-hover:scale-110 transition-all"
+          title="Copy Address"
+        >
+          <Copy size={16} />
+        </button>
+        <div className="flex items-center gap-3 mb-2">
+          <Disc size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.support')}</span>
+        </div>
+        <p className="text-[11px] text-grinta-text-secondary leading-tight mb-2">
+          {t('sidebar.support_desc')}
+        </p>
       </div>
 
-      {/* Card 2: Redemption Rate */}
-      <div className="bg-grinta-card border border-grinta-card-border rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,255,255,0.15)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-blue-500/5 blur-[40px] pointer-events-none"></div>
-
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-grinta-text-secondary bg-black/20">
-            <Percent size={20} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Rate</div>
-            <div className="text-2xl font-bold text-white font-mono">
-              {loading ? '...' : redemptionRate}
-            </div>
-          </div>
+      {/* JOIN TELEGRAM COMMUNITY */}
+      <a
+        href="https://t.me/reflecterlabsproducts/2"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-5 rounded-[28px] bg-[#24A1DE]/5 border border-[#24A1DE]/20 hover:border-[#24A1DE]/50 hover:bg-[#24A1DE]/10 transition-all group relative overflow-hidden shadow-lg"
+      >
+        <div className="absolute top-4 right-4 text-grinta-text-secondary group-hover:text-[#24A1DE] group-hover:scale-110 transition-all">
+          <Send size={16} />
         </div>
-      </div>
-
-      {/* Card 3: Redemption Price */}
-      <div className="bg-grinta-card border border-grinta-card-border rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,255,255,0.15)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-grinta-accent/5 blur-[40px] pointer-events-none"></div>
-
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-grinta-text-secondary bg-black/20">
-            <DollarSign size={20} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Price</div>
-            <div className="text-2xl font-bold text-white font-mono">
-              {loading ? '...' : parseFloat(redemptionPrice.split(' ')[0] || '0').toFixed(4)}
-            </div>
-          </div>
+        <div className="flex items-center gap-3 mb-2">
+          <Send size={16} className="text-[#24A1DE]" />
+          <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.join_telegram')}</span>
         </div>
-      </div>
-
-      {/* Card 4: Liquidation Ratio */}
-      <div className="bg-grinta-card border border-grinta-card-border rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,255,255,0.15)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-red-500/5 blur-[40px] pointer-events-none"></div>
-
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-grinta-text-secondary bg-black/20">
-            <ShieldAlert size={20} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-grinta-text-secondary mb-1">Liquidation Ratio</div>
-            <div className="text-2xl font-bold text-white font-mono">{loading ? '...' : liquidationRatio}</div>
-          </div>
-        </div>
-      </div>
+        <p className="text-[11px] text-grinta-text-secondary leading-tight">
+          {t('sidebar.telegram_desc')}
+        </p>
+      </a>
 
     </div>
   );

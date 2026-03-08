@@ -12,7 +12,10 @@
     "support_desc": "Doe para apoiar o desenvolvimento do Grinta Protocol.",
     "copy_address": "Copiar Endereço Argent",
     "copied": "Endereço copiado para a área de transferência!",
-    "leave_warning": "Deseja sair? O progresso de criação do vault será cancelado."
+    "leave_warning": "Deseja sair? O progresso de criação do vault será cancelado.",
+    "join_telegram": "Entrar no Telegram",
+    "telegram_desc": "Receba as últimas atualizações e junte-se à comunidade oficial da Grinta.",
+    "made_by": "Criado por equipe de engenheiros da"
   },
   "wallet": {
     "connect": "Conectar Carteira",
@@ -55,7 +58,21 @@
     "target": "1.000 Alvo",
     "sys_active": "SISTEMA OPERATIVO",
     "sys_standby": "STANDBY",
-    "protocol_vaults_list": "Lista de Vaults do Protocolo",
+    "coming_soon": "Em breve",
+    "action": "Ação",
+    "grit": "GRIT",
+    "id": "ID",
+    "neural_dashboard_title": "Neural Dashboard",
+    "neural_dashboard_desc": "Monitoramento avançado de clusters de agentes de IA, solvência do protocolo e liquidez do mercado global.",
+    "vault_operations_title": "Operações de Vault",
+    "vault_operations_desc": "Gerencie suas estratégias de rendimento automatizadas, saúde do colateral e exposição do protocolo.",
+    "quantum_portfolio_title": "Quantum Portfolio",
+    "quantum_portfolio_desc": "Gerencie seus ativos L2, monitore saldos de faucet e reivindique retornos de protocolos cross-chain.",
+    "quantum_clusters": "Clusters de Agentes de IA Ativos",
+    "performance_benchmark": "Benchmark de desempenho Agêntico vs Manual",
+    "protocol_vaults_list": "Meus Vaults Recentes",
+    "engine_latency": "Latência do Motor",
+    "protocol_online": "Protocolo Online",
     "total_created": "Total de Vaults Criados:",
     "prepared": "Execução On-chain em Tempo Real",
     "recent_vaults": "Vaults Recentes",
@@ -63,7 +80,7 @@
     "previous": "Anterior",
     "prev": "Anterior",
     "of": "de",
-    "scanning_vaults": "Escaneando Starknet em busca de Vaults...",
+    "scanning_vaults": "Nenhum vault activo encontrado",
     "loading_data": "Carregando dados em tempo real..."
   },
   "new_vault": {

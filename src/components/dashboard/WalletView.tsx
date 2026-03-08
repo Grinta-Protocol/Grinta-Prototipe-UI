@@ -5,8 +5,10 @@ import { useAccount, useSendTransaction } from '@starknet-react/core';
 import { useWbtcBalance } from '../../hooks/useGrinta';
 import { config } from '../../config/contracts';
 import { formatBtcAmount } from '../../lib/starknet';
+import { useTranslation } from 'react-i18next';
 
 export default function WalletView() {
+    const { t } = useTranslation();
     const { vaults, claimAllYield } = useVaults();
     const { address, isConnected } = useAccount();
     const { sendAsync, isPending } = useSendTransaction({});
@@ -37,7 +39,17 @@ export default function WalletView() {
     };
 
     return (
-        <div className="w-full space-y-8 animate-in fade-in duration-700">
+        <div className="w-full space-y-12 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="px-2 pt-6">
+                <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-3 leading-none">{t('overview.quantum_portfolio_title')}</h1>
+                <p className="text-grinta-text-secondary text-base max-w-2xl font-medium leading-relaxed opacity-80">
+                    {t('overview.quantum_portfolio_desc')}
+                </p>
+            </div>
+
+            <div className="h-2"></div>
+
             {/* Wallet Balance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* WBTC Faucet Card (L2) - Orange Bitcoin Style */}
