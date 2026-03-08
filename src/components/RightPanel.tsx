@@ -110,7 +110,7 @@ export default function RightPanel() {
           <div>
             <div className="text-sm font-medium text-grinta-text-secondary mb-1">Redemption Price</div>
             <div className="text-2xl font-bold text-white font-mono">
-              {loading ? '...' : parseFloat(redemptionPrice.split(' ')[0] || '0').toFixed(2)}
+              {loading ? '...' : parseFloat(redemptionPrice.split(' ')[0] || '0').toFixed(4)}
             </div>
           </div>
         </div>
