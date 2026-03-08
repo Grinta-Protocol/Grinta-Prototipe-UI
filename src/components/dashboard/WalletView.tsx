@@ -77,7 +77,7 @@ export default function WalletView() {
                     color="border-grinta-accent/20"
                 />
                 <BalanceCard
-                    label="Rendimiento Total"
+                    label="Total Yield"
                     amount={totalUserYield}
                     unit="BTC"
                     icon={<TrendingUp size={24} className="text-purple-400" />}
@@ -90,7 +90,7 @@ export default function WalletView() {
                 <div className="absolute inset-0 bg-gradient-to-r from-grinta-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                     <div>
-                        <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-2">Rendimiento Acumulado</h3>
+                        <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-2">Accumulated Yield</h3>
                         <div className="flex items-baseline gap-3">
                             <span className="text-5xl font-extrabold text-white">+{totalUserYield.toFixed(6)}</span>
                             <span className="text-2xl font-bold text-grinta-accent">BTC</span>
@@ -117,7 +117,7 @@ export default function WalletView() {
                             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-grinta-text-secondary opacity-30 mb-4">
                                 <Wallet size={32} />
                             </div>
-                            <p className="text-sm text-grinta-text-secondary">No hay transacciones registradas.<br />Tus depósitos y operaciones de Vault aparecerán aquí.</p>
+                            <p className="text-sm text-grinta-text-secondary">No registered transactions.<br />Your deposits and Vault operations will appear here.</p>
                         </div>
                     ) : (
                         vaults.map((v, i) => (
@@ -127,7 +127,7 @@ export default function WalletView() {
                                         <ArrowDownRight size={20} />
                                     </div>
                                     <div>
-                                        <div className="text-sm font-bold text-white">Depósito en Vault {v.id}</div>
+                                        <div className="text-sm font-bold text-white">Deposit in Vault {v.id}</div>
                                         <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">Exitoso • L2 Network</div>
                                     </div>
                                 </div>

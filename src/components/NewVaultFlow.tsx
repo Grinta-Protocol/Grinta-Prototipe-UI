@@ -78,13 +78,13 @@ export default function NewVaultFlow() {
     const flowSteps = [
         { id: 'connect', label: 'Conexión' },
         { id: 'fund', label: 'Fondeo' },
-        { id: 'deposit', label: 'Depósito' },
-        { id: 'create_vault', label: 'Estrategia' },
+        { id: 'deposit', label: 'Deposit' },
+        { id: 'create_vault', label: 'Strategy' },
     ];
 
     const currentStepIdx = flowSteps.findIndex(s => s.id === step);
 
-    // Avance automático si ya está conectado o acaba de conectarse
+    // Automatic advance if already connected or just connected
     useEffect(() => {
         if (step === 'connect' && isConnected && address) {
             const timer = setTimeout(() => {
@@ -93,7 +93,7 @@ export default function NewVaultFlow() {
             return () => clearTimeout(timer);
         }
 
-        // Reset sistémico al desconectar
+        // System reset upon disconnect
         if (!isConnected && step !== 'connect' && step !== 'main_dashboard') {
             setStep('main_dashboard');
         }
@@ -106,7 +106,7 @@ export default function NewVaultFlow() {
         }
     }, [step, isConnected, refetchBalance]);
 
-    // Redirección automática si no hay fondos en el paso de Depósito
+    // Redirección automática si no hay fondos en el paso de Deposit
     useEffect(() => {
         if (step === 'deposit' && !balanceLoading && wbtcBalance === 0n) {
             if (isConnected) {
@@ -182,7 +182,7 @@ export default function NewVaultFlow() {
             flashMints: 0,
             agentActions: 0,
             logs: [
-                { id: '1', message: `SAFE #${safeId} creado on-chain. Depósito de ${depositDisplay} WBTC confirmado.`, timestamp: new Date(), type: 'info' as const }
+                { id: '1', message: `SAFE #${safeId} created on-chain. Deposit of ${depositDisplay} WBTC confirmed.`, timestamp: new Date(), type: 'info' as const }
             ],
             createdAt: new Date()
         });
@@ -257,7 +257,7 @@ export default function NewVaultFlow() {
             }
 
             const tx = await sendAsync(calls);
-            setActionTxStatus(`✓ ${action === 'deposit' ? 'Depósito' : action === 'withdraw' ? 'Retiro' : action === 'borrow' ? 'Préstamo' : 'Pago'} enviado exitosamente`);
+            setActionTxStatus(`✓ ${action === 'deposit' ? 'Deposit' : action === 'withdraw' ? 'Withdrawal' : action === 'borrow' ? 'Loan' : 'Payment'} sent successfully`);
 
             // Real-time local state update
             const numVal = parseFloat(actionAmount);
@@ -363,7 +363,7 @@ export default function NewVaultFlow() {
                             <WalletConnect variant="flow" />
 
                             <div className="mt-12 pt-8 border-t border-white/5 flex flex-col items-center gap-4 opacity-100 group-hover:opacity-100 transition-all duration-700 grayscale group-hover:grayscale-0">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Billeteras Soportadas Argent y Braavos</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Supported Wallets Argent and Braavos</span>
                             </div>
                         </div>
                     </motion.div>
@@ -383,7 +383,7 @@ export default function NewVaultFlow() {
                             </div>
 
                             <div className="mb-10 relative">
-                                <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Fondear Billetera</h2>
+                                <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Fund Wallet</h2>
                                 <p className="text-grinta-text-secondary">Necesitas WBTC de prueba en Sepolia para depositar en tu vault.</p>
                             </div>
 
@@ -462,7 +462,7 @@ export default function NewVaultFlow() {
                                         : 'bg-white/5 text-white/20 cursor-not-allowed'
                                         }`}
                                 >
-                                    Continuar al Depósito <ArrowRight size={18} />
+                                    Continue to Deposit <ArrowRight size={18} />
                                 </button>
                             </div>
                         </div>
@@ -483,8 +483,8 @@ export default function NewVaultFlow() {
                             </div>
 
                             <div className="mb-10 relative">
-                                <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Cargar Colateral</h2>
-                                <p className="text-grinta-text-secondary">Ingresa la cantidad de WBTC que deseas depositar en tu nuevo vault.</p>
+                                <h2 className="text-3xl font-extrabold text-white mb-2 font-syncopate uppercase tracking-tight">Load Collateral</h2>
+                                <p className="text-grinta-text-secondary">Enter the amount of WBTC you want to deposit in your new vault.</p>
                             </div>
 
                             <div className="space-y-8 relative">
@@ -526,7 +526,7 @@ export default function NewVaultFlow() {
                                     <div>
                                         <h4 className="text-white font-bold text-sm mb-1 uppercase tracking-wider">Seguridad Multinivel</h4>
                                         <p className="text-grinta-text-secondary text-[11px] leading-relaxed">
-                                            Tus fondos se depositan en un contrato inteligente auditado en Starknet. Mantienes el control total de tus activos en todo momento.
+                                            Your funds are deposited into an audited smart contract on Starknet. You maintain full control of your assets at all times.
                                         </p>
                                     </div>
                                 </div>
@@ -573,8 +573,8 @@ export default function NewVaultFlow() {
                         className="max-w-4xl mx-auto"
                     >
                         <div className="text-center mb-12">
-                            <h2 className="text-4xl font-black text-white mb-3 font-syncopate uppercase tracking-tight">Elige tu Estrategia</h2>
-                            <p className="text-grinta-text-secondary max-w-lg mx-auto">Selecciona cómo deseas que Grinta Protocol gestione tus activos para maximizar el yield.</p>
+                            <h2 className="text-4xl font-black text-white mb-3 font-syncopate uppercase tracking-tight">Choose your Strategy</h2>
+                            <p className="text-grinta-text-secondary max-w-lg mx-auto">Select how you want Grinta Protocol to manage your assets to maximize yield.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -584,7 +584,7 @@ export default function NewVaultFlow() {
                                     name: 'Yield Grinta',
                                     type: 'agentic',
                                     icon: Bot,
-                                    desc: 'Estrategia agéntica totalmente automatizada. El protocolo ejecuta arbitrajes y flash-mints por ti.',
+                                    desc: 'Strategy agéntica totalmente automatizada. El protocolo ejecuta arbitrajes y flash-mints por ti.',
                                     apy: '12.5%',
                                     accent: 'text-grinta-accent',
                                     bg: 'bg-grinta-accent/5',
@@ -595,7 +595,7 @@ export default function NewVaultFlow() {
                                     name: 'Staking Pasivo',
                                     type: 'manual',
                                     icon: User,
-                                    desc: 'Control manual total. Tú decides cuándo depositar, retirar y bridgear activos entre capas.',
+                                    desc: 'Total manual control. You decide when to deposit, withdraw and bridge assets between layers.',
                                     apy: '4.2%',
                                     accent: 'text-orange-500',
                                     bg: 'bg-orange-500/5',
@@ -672,7 +672,7 @@ export default function NewVaultFlow() {
                                         </span>
                                     </div>
                                     <p className="text-grinta-text-secondary text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                        <Activity size={12} className="text-green-500 animate-pulse" /> Estrategia: {activeVault.strategy}
+                                        <Activity size={12} className="text-green-500 animate-pulse" /> Strategy: {activeVault.strategy}
                                     </p>
                                 </div>
                             </div>
@@ -697,7 +697,7 @@ export default function NewVaultFlow() {
                                     {[
                                         { label: 'Valor Total Vault', val: (activeVault.amount + activeVault.yieldEarned).toFixed(4), unit: 'WBTC', sub: `≈ $${((activeVault.amount + activeVault.yieldEarned) * 70266).toLocaleString()}` },
                                         { label: 'Yield Acumulado', val: activeVault.yieldEarned.toFixed(6), unit: 'WBTC', sub: `APY: ${activeVault.apy}%`, up: true },
-                                        { label: 'Deuda Máxima', val: parseFloat(maxGritBorrowStr).toFixed(2), unit: 'GRIT', sub: `LTV: ${((activeVault.debt / (parseFloat(maxGritBorrowStr) || 1)) * 100).toFixed(2)}%` }
+                                        { label: 'Debt Máxima', val: parseFloat(maxGritBorrowStr).toFixed(2), unit: 'GRIT', sub: `LTV: ${((activeVault.debt / (parseFloat(maxGritBorrowStr) || 1)) * 100).toFixed(2)}%` }
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-white/5 border border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all relative group overflow-hidden">
                                             <div className="text-grinta-text-secondary text-[10px] font-black uppercase tracking-widest mb-3">{stat.label}</div>
@@ -721,7 +721,7 @@ export default function NewVaultFlow() {
                                             </div>
                                             <div>
                                                 <h3 className="text-sm font-black text-white font-syncopate uppercase tracking-widest">Acciones de Control L2</h3>
-                                                <p className="text-[10px] text-grinta-text-secondary font-bold uppercase tracking-widest opacity-60">Gestión directa de colateral y deuda</p>
+                                                <p className="text-[10px] text-grinta-text-secondary font-bold uppercase tracking-widest opacity-60">Direct management of collateral and debt</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 rounded-xl">

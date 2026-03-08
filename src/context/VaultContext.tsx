@@ -103,7 +103,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
         setVaults(prev => prev.map(v => {
             if (v.id === id) {
-                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Depósito Manual: ${amount} WBTC a colateral`, timestamp: new Date(), type: 'info' } as LogEntry];
+                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Deposit Manual: ${amount} WBTC a colateral`, timestamp: new Date(), type: 'info' } as LogEntry];
                 return { ...v, amount: v.amount + amount, logs: newLogs.slice(-20) };
             }
             return v;
@@ -116,7 +116,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
             if (v.id === id) {
                 const newLogs = [...v.logs, {
                     id: Math.random().toString(36).substr(2, 9),
-                    message: `Retiro Manual: ${amount} WBTC de colateral`,
+                    message: `Withdrawal Manual: ${amount} WBTC de colateral`,
                     timestamp: new Date(),
                     type: 'info'
                 } as LogEntry];
@@ -129,7 +129,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const borrowGrit = (id: string, amount: number) => {
         setVaults(prev => prev.map(v => {
             if (v.id === id) {
-                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Generación de Deuda: +${amount} GRIT`, timestamp: new Date(), type: 'info' } as LogEntry];
+                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Generación de Debt: +${amount} GRIT`, timestamp: new Date(), type: 'info' } as LogEntry];
                 return { ...v, debt: (v.debt || 0) + amount, logs: newLogs.slice(-20) };
             }
             return v;
@@ -139,7 +139,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const repayGrit = (id: string, amount: number) => {
         setVaults(prev => prev.map(v => {
             if (v.id === id) {
-                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Pago de Deuda: -${amount} GRIT`, timestamp: new Date(), type: 'info' } as LogEntry];
+                const newLogs = [...v.logs, { id: Math.random().toString(36).substr(2, 9), message: `Payment de Debt: -${amount} GRIT`, timestamp: new Date(), type: 'info' } as LogEntry];
                 return { ...v, debt: Math.max(0, (v.debt || 0) - amount), logs: newLogs.slice(-20) };
             }
             return v;

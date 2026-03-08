@@ -1,0 +1,37 @@
+{
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "my_vaults": "My Vaults",
+        "wallet": "Wallet",
+        "new_vault": "New Vault",
+        "official_paper": "Grinta Official Paper",
+        "official_paper_desc": "Discover the Protocol and test the Interactive Economic Model.",
+        "feedback": "Feedback",
+        "feedback_desc": "Share your feedback on X to improve the protocol.",
+        "support": "Support us",
+        "support_desc": "Donate to support the development of Grinta Protocol.",
+        "copy_address": "Copy Argent Address",
+        "copied": "Address copied to clipboard!",
+        "leave_warning": "Do you want to leave? Vault creation progress will be canceled."
+    },
+    "wallet": {
+        "connect": "Connect Wallet",
+        "disconnect": "Disconnect",
+        "choose": "Choose Wallet"
+    },
+    "dashboard": {
+        "active_vaults": "My Active Vaults",
+        "no_vaults": "No Vaults",
+        "create_first": "Create your first vault to start generating agentic yield.",
+        "create_btn": "CREATE VAULT",
+        "operating": "OPERATING",
+        "vault_id": "Vault ID",
+        "active_yield": "Active Yield",
+        "collateral": "Collateral",
+        "yield": "Yield",
+        "debt": "Debt",
+        "flash_mints": "Flash-Mints",
+        "ai_actions": "AI Actions",
+        "manual": "Manual"
+    }
+}

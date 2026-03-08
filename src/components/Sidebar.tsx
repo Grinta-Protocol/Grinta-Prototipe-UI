@@ -3,8 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText } from 'lucide-react';
 import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Sidebar() {
+  const { t } = useTranslation();
   const location = useLocation();
   const { isConnected } = useAccount();
   const { step, setStep, startNewFlow, vaults } = useVaults();
@@ -18,7 +20,7 @@ export default function Sidebar() {
     }
 
     if (isFlowActive) {
-      if (!window.confirm('¿Quieres salir? Se cancelará el progreso de creación del vault.')) {
+      if (!window.confirm(t('sidebar.leave_warning'))) {
         e.preventDefault();
         return;
       }
@@ -27,9 +29,9 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    { name: 'Dashboard', icon: BarChart3, path: '/app' },
-    { name: `Mis Vaults (${vaults.length})`, icon: LayoutDashboard, path: '/app/vaults' },
-    { name: 'Billetera', icon: Wallet, path: '/app/wallet' },
+    { name: t('sidebar.dashboard'), icon: BarChart3, path: '/app' },
+    { name: `${t('sidebar.my_vaults')} (${vaults.length})`, icon: LayoutDashboard, path: '/app/vaults' },
+    { name: t('sidebar.wallet'), icon: Wallet, path: '/app/wallet' },
   ];
 
   return (
@@ -79,7 +81,7 @@ export default function Sidebar() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-grinta-accent text-black font-bold text-sm hover:brightness-110 transition-all shadow-[0_0_15px_rgba(74,222,128,0.2)]"
           >
             <PlusCircle size={18} />
-            <span>Nuevo Vault</span>
+            <span>{t('sidebar.new_vault')}</span>
           </button>
         </nav>
       </div>
@@ -92,44 +94,44 @@ export default function Sidebar() {
         >
           <div className="flex items-center gap-3 mb-2">
             <FileText size={16} className="text-[#00FF41]" />
-            <span className="text-xs font-bold text-[#00FF41] uppercase tracking-wider">Papel Oficial Grinta</span>
+            <span className="text-xs font-bold text-[#00FF41] uppercase tracking-wider">{t('sidebar.official_paper')}</span>
           </div>
           <p className="text-[11px] text-gray-400 leading-tight">
-            Descubre el Protocolo y el testea el Modelo Económico Interactivo.
+            {t('sidebar.official_paper_desc')}
           </p>
         </Link>
 
         <a
-          href="https://x.com/intent/post?text=@GrintaProtocol%20Feedback:%20"
+          href="https://x.com/intent/post?text=@GrintaProtocol%20Feedback:%20&url=https://x.com/reflecterlabs/status/2030450172182909259&hashtags=GrintaProtocol,Starknet,BTCFi"
           target="_blank"
           rel="noopener noreferrer"
           className="block p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-grinta-accent/30 hover:bg-white/10 transition-all group"
         >
           <div className="flex items-center gap-3 mb-2">
             <Twitter size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
-            <span className="text-xs font-bold text-white uppercase tracking-wider">Feedback</span>
+            <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.feedback')}</span>
           </div>
           <p className="text-[11px] text-grinta-text-secondary leading-tight">
-            Comparte tu feedback en X para mejorar el protocolo.
+            {t('sidebar.feedback_desc')}
           </p>
         </a>
 
-        <div className="p-4 rounded-2xl bg-grinta-accent/5 border border-grinta-accent/10">
+        <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-grinta-accent/30 transition-all group">
           <div className="flex items-center gap-3 mb-2">
-            <Disc size={16} className="text-grinta-accent" />
-            <span className="text-xs font-bold text-grinta-accent uppercase tracking-wider">Support us</span>
+            <Disc size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.support')}</span>
           </div>
-          <p className="text-[10px] text-grinta-text-secondary leading-tight mb-3">
-            Dona para apoyar el desarrollo de Grinta Protocol.
+          <p className="text-[11px] text-grinta-text-secondary leading-tight mb-3">
+            {t('sidebar.support_desc')}
           </p>
           <button
             onClick={() => {
-              navigator.clipboard.writeText('0x040033d6A1F5E78a127898fB39F9B583a2D904B7275D4be21663Eca8Fa915951');
-              alert('Address copiada al portapapeles!');
+              navigator.clipboard.writeText('0x038d8939cb8b6f293630d3bfa90e8e097cfe16a03ee2c7186c5f597cbdac9c70');
+              alert(t('sidebar.copied'));
             }}
-            className="w-full py-2 bg-grinta-accent/10 border border-grinta-accent/20 rounded-lg text-[10px] font-bold text-grinta-accent hover:bg-grinta-accent/20 transition-colors uppercase"
+            className="w-full py-2 bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white group-hover:bg-grinta-accent group-hover:text-black group-hover:border-grinta-accent transition-colors uppercase"
           >
-            Copy Argent Address
+            {t('sidebar.copy_address')}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Wallet, LogOut, ChevronDown, MousePointerClick } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
+import { useTranslation } from 'react-i18next';
 
 interface WalletConnectProps {
     variant?: 'nav' | 'flow';
@@ -12,6 +13,7 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
     const { disconnect } = useDisconnect();
+    const { t } = useTranslation();
 
     const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
@@ -39,7 +41,7 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                             }}
                             className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-500/10 rounded-xl transition-colors text-red-500 font-bold text-xs"
                         >
-                            <span>Desconectar</span>
+                            <span>{t('wallet.disconnect')}</span>
                             <LogOut size={14} />
                         </button>
                     </div>
@@ -58,13 +60,13 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                 }
             >
                 {variant === 'nav' ? <Wallet size={14} /> : <MousePointerClick size={20} />}
-                <span>Conectar Billetera</span>
+                <span>{t('wallet.connect')}</span>
                 <ChevronDown size={variant === 'nav' ? 12 : 18} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
                 <div className={`absolute top-full right-0 mt-2 w-64 bg-[#0D0F10] border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in duration-200`}>
-                    <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">Elegir Billetera</div>
+                    <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">{t('wallet.choose')}</div>
                     <div className="space-y-1">
                         {connectors.map((connector) => (
                             <button

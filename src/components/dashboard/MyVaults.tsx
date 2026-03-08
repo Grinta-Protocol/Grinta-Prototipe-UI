@@ -1,9 +1,11 @@
 import React from 'react';
 import { useVaults } from '../../context/VaultContext';
 import { Bot, Zap, TrendingUp, Clock, ChevronRight, Bitcoin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function MyVaults() {
     const { vaults, setStep, setActiveVaultId } = useVaults();
+    const { t } = useTranslation();
 
     if (vaults.length === 0) {
         return (
@@ -12,14 +14,14 @@ export default function MyVaults() {
                     <Bot size={40} className="animate-pulse" />
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-2xl font-bold font-syncopate uppercase tracking-widest text-white/40">No hay Vaults</h2>
-                    <p className="text-grinta-text-secondary text-sm">Crea tu primer vault para empezar a generar yield agéntico.</p>
+                    <h2 className="text-2xl font-bold font-syncopate uppercase tracking-widest text-white/40">{t('dashboard.no_vaults')}</h2>
+                    <p className="text-grinta-text-secondary text-sm">{t('dashboard.create_first')}</p>
                 </div>
                 <button
                     onClick={() => setStep('connect')}
                     className="px-8 py-3 bg-grinta-accent text-black font-bold rounded-xl hover:scale-105 transition-transform"
                 >
-                    CREAR VAULT
+                    {t('dashboard.create_btn')}
                 </button>
             </div>
         );
@@ -28,9 +30,9 @@ export default function MyVaults() {
     return (
         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-bold text-white uppercase tracking-widest">Mis Vaults Activos</h2>
+                <h2 className="text-xl font-bold text-white uppercase tracking-widest">{t('dashboard.active_vaults')}</h2>
                 <span className="px-3 py-1 rounded-full bg-grinta-accent/10 border border-grinta-accent/20 text-grinta-accent text-[10px] font-bold">
-                    {vaults.length} OPERANDO
+                    {vaults.length} {t('dashboard.operating')}
                 </span>
             </div>
 
@@ -59,35 +61,35 @@ export default function MyVaults() {
                                         {isManual ? <Bitcoin size={28} /> : <Bot size={28} />}
                                     </div>
                                     <div>
-                                        <div className={`text-[10px] font-bold ${accentText} uppercase tracking-widest mb-1`}>Vault ID: {vault.id}</div>
+                                        <div className={`text-[10px] font-bold ${accentText} uppercase tracking-widest mb-1`}>{t('dashboard.vault_id')}: {vault.id}</div>
                                         <div className="text-lg font-bold text-white">{vault.strategy}</div>
                                         <div className="text-xs text-grinta-text-secondary mt-1 flex items-center gap-3">
                                             <span className="flex items-center gap-1"><Clock size={10} /> {new Date(vault.createdAt).toLocaleDateString()}</span>
-                                            <span className={`flex items-center gap-1 ${accentText} font-bold`}><Zap size={10} /> Yield Activo</span>
+                                            <span className={`flex items-center gap-1 ${accentText} font-bold`}><Zap size={10} /> {t('dashboard.active_yield')}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
                                     <div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Colateral</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{t('dashboard.collateral')}</div>
                                         <div className="text-base font-bold text-white">{vault.amount.toFixed(2)} BTC</div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Yield</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{t('dashboard.yield')}</div>
                                         <div className={`text-base font-bold ${accentText}`}>+{vault.yieldEarned.toFixed(6)} BTC</div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Deuda</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{t('dashboard.debt')}</div>
                                         <div className="text-base font-bold text-blue-400">{(vault.debt || 0).toFixed(1)} GRIT</div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">Flash-Mints</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{t('dashboard.flash_mints')}</div>
                                         <div className="text-base font-bold text-white">{isManual ? '0' : vault.flashMints}</div>
                                     </div>
                                     <div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{isManual ? 'Control' : 'Acciones IA'}</div>
-                                        <div className="text-base font-bold text-white">{isManual ? 'Manual' : vault.agentActions}</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase mb-1">{isManual ? 'Control' : t('dashboard.ai_actions')}</div>
+                                        <div className="text-base font-bold text-white">{isManual ? t('dashboard.manual') : vault.agentActions}</div>
                                     </div>
                                 </div>
 

@@ -4,6 +4,7 @@ import { StarknetConfig, jsonRpcProvider, voyager, argent, braavos } from '@star
 import { sepolia } from '@starknet-react/chains';
 import App from './App.tsx';
 import './index.css';
+import './i18n';
 
 const RPC_URL = import.meta.env.VITE_STARKNET_RPC_URL || 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_10/A_aQEk8ItXSiyZveFp_6y';
 

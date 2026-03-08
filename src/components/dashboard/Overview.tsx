@@ -33,7 +33,7 @@ export default function Overview() {
                     trend={hasVaults ? "En aumento" : "Postergado"}
                 />
                 <MetricCard
-                    label="Agentes Activos"
+                    label="Active Agents"
                     value={hasVaults ? "156" : "0"}
                     icon={<Users size={20} className="text-purple-400" />}
                     trend={hasVaults ? "Operativos" : "En Pausa"}
@@ -51,7 +51,7 @@ export default function Overview() {
                         <span className="text-5xl font-extrabold text-white">{totalUserDeposits.toFixed(2)}</span>
                         <span className="text-2xl font-bold text-grinta-accent">BTC</span>
                     </div>
-                    <p className="text-grinta-text-secondary text-sm mt-4">Asignado en {vaults.length} Vaults activos</p>
+                    <p className="text-grinta-text-secondary text-sm mt-4">Assigned in {vaults.length} active Vaults</p>
                 </div>
             </div>
 

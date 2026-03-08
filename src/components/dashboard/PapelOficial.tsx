@@ -8,7 +8,7 @@ export default function PapelOficial() {
     return (
         <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col gap-6">
             <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
-                <h1 className="text-3xl font-syncopate uppercase tracking-widest font-bold">Papel Oficial</h1>
+                <h1 className="text-3xl font-syncopate uppercase tracking-widest font-bold">Official Paper</h1>
                 <div className="flex gap-4">
                     <button
                         onClick={() => setActiveTab('pitch')}

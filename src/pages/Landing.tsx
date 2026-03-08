@@ -570,6 +570,32 @@ export default function Landing() {
             color: #fff;
             font-weight: 700;
         }
+
+        /* --- RESPONSIVE FIXES --- */
+        @media (max-width: 768px) {
+            .brutal-nav {
+                padding: 1.5rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .brutal-nav.scrolled {
+                width: 95%;
+                min-width: auto;
+                top: 1rem;
+                padding: 1rem;
+                flex-direction: row;
+                gap: 0;
+            }
+            .nav-menu {
+                display: none;
+            }
+            .hero h1 {
+                font-size: 18vw;
+            }
+            .big-text {
+                font-size: 8vw;
+            }
+        }
       `}</style>
 
       <div className="noise"></div>
