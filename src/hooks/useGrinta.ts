@@ -5,6 +5,7 @@ import {
   getSafeEngine,
   getSafeManager,
   getWbtcContract,
+  getCollateralJoin,
   toBigInt,
   formatRay,
   formatUsd,
@@ -247,4 +248,105 @@ export function usePositionHealth(safeId: number | null) {
   }, [safeId]);
 
   return { health, isLoading };
+}
+
+// ─── Protocol Stats (TVL, Total Debt, Safe Count) ───
+
+export interface ProtocolStats {
+  tvl: number;           // Total collateral in WBTC
+  tvlUsd: number;        // Total collateral in USD
+  totalDebt: number;      // Total debt in GRIT
+  totalDebtUsd: number;   // Total debt in USD
+  safeCount: number;      // Total number of SAFEs
+  collateralPrice: number; // WBTC price in USD
+  redemptionPrice: number; // GRIT price in USD
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useProtocolStats(): ProtocolStats {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<{
+    tvlRaw: bigint;
+    totalDebtRaw: bigint;
+    safeCount: number;
+    collateralPriceRaw: bigint;
+    redemptionPriceRaw: bigint;
+  } | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const engine = getSafeEngine();
+      const collateralJoin = getCollateralJoin();
+
+      const [tvlRaw, totalDebtRaw, safeCount, collateralPriceRaw, redemptionPriceRaw] = await Promise.all([
+        collateralJoin.get_total_assets(),
+        engine.get_total_debt(),
+        engine.get_safe_count(),
+        engine.get_collateral_price(),
+        engine.get_redemption_price(),
+      ]);
+
+      setData({
+        tvlRaw: toBigInt(tvlRaw),
+        totalDebtRaw: toBigInt(totalDebtRaw),
+        safeCount: Number(safeCount),
+        collateralPriceRaw: toBigInt(collateralPriceRaw),
+        redemptionPriceRaw: toBigInt(redemptionPriceRaw),
+      });
+    } catch (e) {
+      console.error("[useProtocolStats] error:", e);
+      setError(e instanceof Error ? e.message : "Failed to fetch protocol stats");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  if (loading || !data) {
+    return {
+      tvl: 0,
+      tvlUsd: 0,
+      totalDebt: 0,
+      totalDebtUsd: 0,
+      safeCount: 0,
+      collateralPrice: 0,
+      redemptionPrice: 0,
+      loading: true,
+      error,
+      refetch: fetchStats,
+    };
+  }
+
+  const WBTC_DECIMALS = 8;
+  const GRIT_DECIMALS = 18;
+  const PRICE_DECIMALS = 18;
+
+  const tvl = Number(data.tvlRaw) / Number(10n ** BigInt(WBTC_DECIMALS));
+  const totalDebt = Number(data.totalDebtRaw) / Number(10n ** BigInt(GRIT_DECIMALS));
+  const collateralPrice = Number(data.collateralPriceRaw) / Number(10n ** BigInt(PRICE_DECIMALS));
+  const redemptionPrice = Number(data.redemptionPriceRaw) / Number(10n ** 27n);
+
+  const tvlUsd = tvl * collateralPrice;
+  const totalDebtUsd = totalDebt * redemptionPrice;
+
+  return {
+    tvl,
+    tvlUsd,
+    totalDebt,
+    totalDebtUsd,
+    safeCount: data.safeCount,
+    collateralPrice,
+    redemptionPrice,
+    loading: false,
+    error,
+    refetch: fetchStats,
+  };
 }

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useProtocolStats } from '../hooks/useGrinta';
 
 export type Step = 'connect' | 'fund' | 'deposit' | 'create_vault' | 'vault_view' | 'main_dashboard';
 
@@ -81,10 +82,28 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const vaultsRef = useRef(vaults);
     vaultsRef.current = vaults;
 
+    const { tvl, collateralPrice, redemptionPrice, loading } = useProtocolStats();
+
+    useEffect(() => {
+        if (!loading && tvl > 0) {
+            setMarket(prev => ({
+                ...prev,
+                btcPrice: collateralPrice,
+                redemptionPrice: redemptionPrice,
+                redemptionRate: 0,
+                redemptionPriceHistory: [...prev.redemptionPriceHistory.slice(1), redemptionPrice],
+                liquidationRatio: 150.00,
+                tvl: tvl,
+                flashMints24h: 0,
+                arbitrageVol: 0
+            }));
+        }
+    }, [loading, tvl, collateralPrice, redemptionPrice]);
+
     // Simulation interval removed to migrate to real on-chain data.
     // Infrastructure ready to receive real-time updates from Starknet hooks.
     useEffect(() => {
-        // Initial protocol data fetching will be implemented here
+        // Protocol stats are now fetched via useProtocolStats hook
     }, []);
 
     const addVault = (vault: Vault) => {
