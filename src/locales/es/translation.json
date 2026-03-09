@@ -20,7 +20,11 @@
   "wallet": {
     "connect": "Conectar Billetera",
     "disconnect": "Desconectar",
-    "choose": "Elegir Billetera"
+    "choose": "Elegir Billetera",
+    "connect_bitcoin": "Conectar Bitcoin",
+    "bitcoin_connected": "Bitcoin Conectado",
+    "xverse_desc": "Bitcoin L1",
+    "sats_connect": "Sats Connect"
   },
   "dashboard": {
     "active_vaults": "Mis Vaults Activos",

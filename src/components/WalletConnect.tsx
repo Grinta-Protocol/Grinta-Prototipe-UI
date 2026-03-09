@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, LogOut, ChevronDown, MousePointerClick } from 'lucide-react';
+import { Wallet, LogOut, ChevronDown, MousePointerClick, Bitcoin } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
 import { useTranslation } from 'react-i18next';
 
@@ -95,6 +95,26 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                             </button>
                         ))}
                     </div>
+
+                    <div className="h-px bg-white/5 my-3 mx-2"></div>
+                    <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">{t('wallet.xverse_desc')}</div>
+
+                    <button
+                        onClick={() => {
+                            // Phase 2, Sprint 1: Sats Connect Integration placeholder
+                            alert(t('wallet.sats_connect') + " logic coming soon!");
+                            setIsOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F7931A]/5 rounded-2xl transition-all group border border-transparent hover:border-[#F7931A]/20"
+                    >
+                        <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-[#F7931A]/20 group-hover:text-[#F7931A] transition-colors">
+                            <Bitcoin size={16} />
+                        </div>
+                        <div className="flex flex-col items-start">
+                            <span className="text-white font-bold text-xs">XVerse</span>
+                            <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest pt-0.5">{t('wallet.sats_connect')}</span>
+                        </div>
+                    </button>
                 </div>
             )}
         </div>

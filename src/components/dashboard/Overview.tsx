@@ -1,12 +1,12 @@
 import React, { useState, ReactNode, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVaults } from '../../context/VaultContext';
-import { Activity, Zap, Database, ChevronLeft, ChevronRight, LayoutDashboard, TrendingUp, Loader2, ExternalLink, Eye, ShieldCheck, Cpu, Share2, Terminal, BarChart3, Target, Bitcoin, Percent, DollarSign, ShieldAlert } from 'lucide-react';
+import { Activity, Zap, Database, ChevronLeft, ChevronRight, ArrowRight, LayoutDashboard, TrendingUp, Loader2, ExternalLink, Eye, ShieldCheck, Cpu, Share2, Terminal, BarChart3, Target, Bitcoin, Percent, DollarSign, ShieldAlert } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { useReadContract } from '@starknet-react/core';
 import { config } from '../../config/contracts';
 import { useTranslation } from 'react-i18next';
-import { useRates } from '../../hooks/useGrinta';
+import { useRates, useMarketPrice } from '../../hooks/useGrinta';
 import { useBitcoinPrice } from '../../hooks/useBitcoinPrice';
 
 export default function Overview() {
@@ -14,6 +14,7 @@ export default function Overview() {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { redemptionPrice, redemptionRate, collateralPrice, liquidationRatio, loading: ratesLoading } = useRates();
+    const { price: marketPrice, loading: marketPriceLoading } = useMarketPrice();
     const { price: btcPriceData } = useBitcoinPrice();
 
     const btcFormatted = btcPriceData ? `$${btcPriceData.usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '...';
@@ -143,42 +144,67 @@ export default function Overview() {
             </div>
 
             {/* Header Section */}
-            <div className="px-2 pt-6 pb-4">
-                <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-3 leading-none">{t('overview.neural_dashboard_title')}</h1>
-                <p className="text-grinta-text-secondary text-base max-w-2xl font-medium leading-relaxed opacity-80">
-                    {t('overview.neural_dashboard_desc')}
-                </p>
+            <div className="px-2 pt-6 pb-4 flex flex-col md:flex-row items-baseline justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-3 leading-none">{t('overview.neural_dashboard_title')}</h1>
+                    <p className="text-grinta-text-secondary text-base max-w-2xl font-medium leading-relaxed opacity-80">
+                        {t('overview.neural_dashboard_desc')}
+                    </p>
+                </div>
+
+
             </div>
 
             <div className="h-4"></div>
 
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 1. GRIT Market Price */}
+                <div className="bg-grinta-card border border-grinta-accent/30 rounded-3xl p-6 backdrop-blur-md relative overflow-hidden shadow-[0_0_30px_rgba(74,222,128,0.15),inset_0_1px_2px_rgba(255,255,255,0.15)] group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-grinta-accent/5 pointer-events-none"></div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="w-10 h-10 rounded-full bg-grinta-accent flex items-center justify-center shadow-[0_0_15px_rgba(74,222,128,0.4)]">
+                                <Zap size={20} className="text-black" />
+                            </div>
+                            <span className="text-[10px] font-black text-grinta-accent uppercase tracking-tighter bg-grinta-accent/10 border border-grinta-accent/20 px-2 py-1 rounded">
+                                Ekubo Real-time
+                            </span>
+                        </div>
+                        <div className="text-sm font-bold text-grinta-text-secondary mb-1">GRIT Market Price</div>
+                        <div className="text-3xl font-black text-white font-mono tracking-tighter">
+                            {marketPriceLoading ? '...' : `$${parseFloat(marketPrice).toFixed(4)}`}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Global TVL */}
                 <MetricCard
                     label={t('overview.tvl')}
                     value={`${market.tvl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} BTC`}
                     icon={<Activity size={20} className="text-grinta-accent" />}
                     trend={hasVaults ? t('overview.tvl_trend_active') : t('overview.tvl_trend_inactive')}
                 />
-                <MetricCard
-                    label={t('overview.apy')}
-                    value={`${hasVaults ? averageApy : 0}%`}
-                    icon={<TrendingUp size={20} className="text-blue-400" />}
-                    trend={hasVaults ? t('overview.apy_trend_active') : t('overview.apy_trend_inactive')}
-                />
-                <MetricCard
-                    label={t('overview.flash_mints')}
-                    value={market.flashMints24h.toLocaleString()}
-                    icon={<Zap size={20} className="text-yellow-400" />}
-                    trend={hasVaults ? t('overview.flash_trend_active') : t('overview.flash_trend_inactive')}
-                />
+
+                {/* 3. Total Protocol Vaults */}
                 <MetricCard
                     label={t('overview.total_vaults')}
                     value={isLoadingCount ? '...' : totalProtocolVaults.toString()}
                     icon={isLoadingCount ? <Loader2 size={20} className="text-purple-400 animate-spin" /> : <Database size={20} className="text-purple-400" />}
                     trend={totalProtocolVaults > 0 ? t('overview.agents_trend_active') : t('overview.agents_trend_inactive')}
                 />
+
+                {/* 4. Average APY */}
+                <MetricCard
+                    label={t('overview.apy')}
+                    value={`${hasVaults ? averageApy : 0}%`}
+                    icon={<TrendingUp size={20} className="text-blue-400" />}
+                    trend={hasVaults ? t('overview.apy_trend_active') : t('overview.apy_trend_inactive')}
+                />
             </div>
+
 
             {/* Middle Row: Participation & Peg Health */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -444,6 +470,8 @@ export default function Overview() {
                     </div>
                 </div>
             </div>
+
+
 
             {/* Neural Ticker Tape */}
             <div className="py-4">
