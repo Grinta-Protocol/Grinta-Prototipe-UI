@@ -1,0 +1,47 @@
+{
+    "repo": "keep-starknet-strange/starknet-skills-collective",
+    "skills": [
+        {
+            "name": "starknet-wallet",
+            "description": "Wallet management, transfers, session keys, gasless transactions.",
+            "path": "agents/skills/starknet-wallet",
+            "source": "keep-starknet-strange/starknet-agentic/skills/starknet-wallet"
+        },
+        {
+            "name": "starknet-defi",
+            "description": "Token swaps, DCA, staking, lending via AVNU aggregator.",
+            "path": "agents/skills/starknet-defi",
+            "source": "keep-starknet-strange/starknet-agentic/skills/starknet-defi"
+        },
+        {
+            "name": "starknet-identity",
+            "description": "ERC-8004 on-chain identity and reputation.",
+            "path": "agents/skills/starknet-identity",
+            "source": "keep-starknet-strange/starknet-agentic/skills/starknet-identity"
+        },
+        {
+            "name": "starkzap-sdk",
+            "description": "End-to-end workflows for StarkZap SDK, onboarding, and staking.",
+            "path": "agents/skills/starkzap-sdk",
+            "source": "keep-starknet-strange/starknet-agentic/skills/starkzap-sdk"
+        },
+        {
+            "name": "cairo-auditor",
+            "description": "Cairo security auditing with 217+ real-world audit findings.",
+            "path": "agents/skills/cairo-auditor",
+            "source": "keep-starknet-strange/starknet-skills/cairo-auditor"
+        },
+        {
+            "name": "cairo-contracts",
+            "description": "Cairo contract structure, storage, events, and OZ patterns.",
+            "path": "agents/skills/cairo-contracts",
+            "source": "keep-starknet-strange/starknet-agentic/skills/cairo-contracts"
+        },
+        {
+            "name": "cairo-security",
+            "description": "Security patterns, audit checklists, and known vulnerabilities.",
+            "path": "agents/skills/cairo-security",
+            "source": "keep-starknet-strange/starknet-agentic/skills/cairo-security"
+        }
+    ]
+}

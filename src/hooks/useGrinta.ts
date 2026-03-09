@@ -4,6 +4,7 @@ import { config } from "../config/contracts";
 import {
   getSafeEngine,
   getSafeManager,
+  getGrintaHook,
   getWbtcContract,
   getCollateralJoin,
   toBigInt,
@@ -348,5 +349,36 @@ export function useProtocolStats(): ProtocolStats {
     loading: false,
     error,
     refetch: fetchStats,
+  };
+}
+
+// ─── Market Price (read from GrintaHook) ───
+
+export function useMarketPrice() {
+  const [price, setPrice] = useState<bigint | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPrice = useCallback(async () => {
+    try {
+      const hook = getGrintaHook();
+      const result = await hook.get_market_price();
+      setPrice(toBigInt(result));
+    } catch (e) {
+      console.error("[useMarketPrice] error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPrice();
+    const interval = setInterval(fetchPrice, 30000); // 30s update
+    return () => clearInterval(interval);
+  }, [fetchPrice]);
+
+  return {
+    price: price ? formatWad(price) : "0.00",
+    priceRaw: price || 0n,
+    loading
   };
 }

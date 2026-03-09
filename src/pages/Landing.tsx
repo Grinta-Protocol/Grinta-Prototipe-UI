@@ -837,39 +837,9 @@ export default function Landing() {
             <div className="bg-black/5 border border-black/10 rounded-[32px] p-8 flex flex-col items-center justify-center text-center backdrop-blur-sm group hover:border-black/20 transition-all">
               <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-600 rounded-full border border-red-500/20">
                 <div className={`w-2 h-2 rounded-full ${campaign.state.isActive ? 'bg-red-500 animate-pulse' : 'bg-red-300'}`}></div>
-                <span className="text-[9px] font-black uppercase tracking-widest leading-none">Campaign Activator</span>
+                <span className="text-[9px] font-black uppercase tracking-widest leading-none">Campaign Grinta</span>
               </div>
-
-              <h4 className="text-lg font-bold mb-3 font-syncopate uppercase tracking-widest">30-Day Protocol Launch</h4>
-              <p className="text-xs text-gray-500 mb-6 leading-relaxed max-w-sm">
-                Triggers the 850-post automated sequence across MoltX, 4claw, and Moltbook.
-                <span className="text-red-600 font-bold block mt-1 uppercase text-[9px]">Aviso: Esta acción es irreversible una vez activada.</span>
-              </p>
-
-              <button
-                onClick={campaign.activateCampaign}
-                disabled={campaign.state.isActive}
-                className={`w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 border relative overflow-hidden group
-                  ${campaign.state.isActive
-                    ? 'bg-red-500 text-white border-red-500 cursor-not-allowed shadow-[0_0_20px_rgba(239,68,68,0.3)]'
-                    : 'bg-white text-black border-black/10 hover:bg-black hover:text-white hover:border-black hover:shadow-2xl active:scale-95'
-                  }`}
-              >
-                {campaign.state.isActive ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
-                    Campaign is LIVE - Posting Hourly
-                  </span>
-                ) : (
-                  <span>Activate 30-Day Campaign 🚀</span>
-                )}
-              </button>
-
-              {campaign.state.isActive && (
-                <div className="mt-4 text-[9px] font-mono text-gray-400">
-                  STARTED: {new Date(campaign.state.startTime).toLocaleDateString()} | POSTS SENT: {campaign.state.lastRunPostIndex}
-                </div>
-              )}
+              <h4 className="text-lg font-bold mb-3 font-syncopate uppercase tracking-widest">Protocol Launch</h4>
             </div>
           </div>
         </footer>

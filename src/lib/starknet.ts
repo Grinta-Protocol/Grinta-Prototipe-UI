@@ -179,4 +179,29 @@ export function btcToWad(btcAmount: bigint): bigint {
   return btcAmount * 10n ** 10n;
 }
 
+/**
+ * Helper to build a Starknet call object for multicalls
+ */
+export function buildCall(address: string, entrypoint: string, calldata: (string | number | bigint)[]): StarknetCall {
+  return {
+    contractAddress: address,
+    entrypoint,
+    calldata: calldata.map(c => String(c))
+  };
+}
+
+/**
+ * Helper for ERC20 Approve call
+ */
+export function erc20ApproveCall(token: string, spender: string, amount: bigint): StarknetCall {
+  return buildCall(token, "approve", [spender, ...u256Calldata(amount)]);
+}
+
+/**
+ * Helper for ERC20 Transfer call
+ */
+export function erc20TransferCall(token: string, recipient: string, amount: bigint): StarknetCall {
+  return buildCall(token, "transfer", [recipient, ...u256Calldata(amount)]);
+}
+
 export { config };
