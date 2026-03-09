@@ -45,17 +45,17 @@ export default function PitchDeck() {
                             <AlertOctagon className="text-red-500" /> Current Paradigm
                         </h3>
                         <ul className="space-y-4">
-                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300">
-                                <strong className="text-red-400 block mb-1">Centralization Risk</strong>
-                                Reliance on custodial fiat or easily manipulated oracle subsets.
+                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                                <strong className="text-red-400 block mb-1">The Centralization Trap</strong>
+                                Current stablecoins rely on custodial fiat choke points or easily manipulated, centralized oracle subsets.
                             </li>
-                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300">
-                                <strong className="text-red-400 block mb-1">Governance Fragility</strong>
-                                Slow, human-driven DAOs failing to react to real-time market shocks.
+                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                                <strong className="text-red-400 block mb-1">Governance Paralysis</strong>
+                                Slow, human-driven DAOs are inherently incapable of reacting to sub-second market volatility and black swan events.
                             </li>
-                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300">
-                                <strong className="text-red-400 block mb-1">Idle Bitcoin Capital</strong>
-                                Over $1 Trillion in BTC sits unutilized, lacking native, trust-minimized yield avenues.
+                            <li className="bg-[#0A0A0A] p-4 rounded-xl border border-red-900/20 text-gray-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                                <strong className="text-red-400 block mb-1">Idle Deep Capital</strong>
+                                Over $1.3 Trillion in Bitcoin sits dormant, lacking a native, trust-minimized pathway to generate deep liquidity ecosystem yield.
                             </li>
                         </ul>
                     </div>
@@ -98,20 +98,20 @@ export default function PitchDeck() {
                 </h2>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222]">
+                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222] hover:border-[#00FF41]/30 transition-all">
                         <span className="text-4xl font-black text-[#00FF41]/20 mb-2 block">01</span>
-                        <h4 className="text-lg font-bold text-white mb-2">MiCA & Regulatory Shifts</h4>
-                        <p className="text-sm text-gray-400">Strict stablecoin regulations are pushing markets toward truly decentralized, algorithm-backed stablecoins over fiat-backed IOUs.</p>
+                        <h4 className="text-lg font-bold text-white mb-2">The MiCA Catalyst</h4>
+                        <p className="text-sm text-gray-400">Strict global regulations are forcing a massive capital shift away from fiat-backed IOUs toward truly decentralized, algorithmically sound stablecoins.</p>
                     </motion.div>
-                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222]">
+                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222] hover:border-[#00FF41]/30 transition-all">
                         <span className="text-4xl font-black text-[#00FF41]/20 mb-2 block">02</span>
-                        <h4 className="text-lg font-bold text-white mb-2">Rise of L2s & Agents</h4>
-                        <p className="text-sm text-gray-400">The maturity of Starknet and the explosion of autonomous AI agents demand protocols built natively for programmatic interaction.</p>
+                        <h4 className="text-lg font-bold text-white mb-2">The Agentic Economy</h4>
+                        <p className="text-sm text-gray-400">The maturity of Starknet scaling and the explosion of autonomous AI agents demand a financial base layer built specifically for programmatic, machine-speed interaction.</p>
                     </motion.div>
-                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222]">
+                    <motion.div variants={itemVariants} className="bg-[#0A0A0A] p-6 rounded-2xl border border-[#222222] hover:border-[#00FF41]/30 transition-all">
                         <span className="text-4xl font-black text-[#00FF41]/20 mb-2 block">03</span>
-                        <h4 className="text-lg font-bold text-white mb-2">PID Validation</h4>
-                        <p className="text-sm text-gray-400">Mathematical models (RAI, HAI) have proven PID controllers work in stress tests. Grinta applies this strictly to Bitcoin.</p>
+                        <h4 className="text-lg font-bold text-white mb-2">Proven Mathematics</h4>
+                        <p className="text-sm text-gray-400">PID controllers have been battle-tested in extreme stress tests (e.g., RAI/HAI). Grinta is the first to apply this unbreakable math strictly to the immense liquidity of Bitcoin.</p>
                     </motion.div>
                 </div>
 
@@ -184,28 +184,28 @@ export default function PitchDeck() {
                 </div>
             </motion.section>
 
-            {/* SLIDE 4: GTM Strategy */}
+            {/* SLIDE 4: Execution */}
             <motion.section variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true }} className="bg-[#111111] border border-[#222222] rounded-3xl p-10">
                 <h2 className="text-3xl font-syncopate font-bold text-white mb-8 border-b border-[#222222] pb-4">
-                    4. Go-To-Market <span className="text-[#00FF41]">Strategy</span>
+                    4. Execution & <span className="text-[#00FF41]">Adoption Plan</span>
                 </h2>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
                     <div className="space-y-4">
-                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#00FF41] pl-3">Phase 1: Agent Launch</h4>
-                        <p className="text-sm text-gray-400">Community-led bootstrapping via autonomous networks (Moltbook, 4claw). Establishing the first AI-managed safe deployments.</p>
+                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#00FF41] pl-3">Phase 1: Autonomous Bootstrapping</h4>
+                        <p className="text-sm text-gray-400">Igniting initial liquidity through agentic networks (Moltbook, 4claw). Establishing the first generation of AI-managed safe deployments without human friction.</p>
                     </div>
                     <div className="space-y-4">
-                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#15803d] pl-3">Phase 2: DeFi Primitives</h4>
-                        <p className="text-sm text-gray-400">Integrating GRIT into Starknet DEXs (Ekubo, Jediswap) for deep liquidity and incentivized arb pools bridging L1 and L2.</p>
+                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#15803d] pl-3">Phase 2: Deep Protocol Integration</h4>
+                        <p className="text-sm text-gray-400">Embedding GRIT directly into leading Starknet DEXs (Ekubo, Jediswap) to capture extreme capital efficiency and incentivize cross-layer L1/L2 arbitrage pools.</p>
                     </div>
                     <div className="space-y-4">
-                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#0a361c] pl-3">Phase 3: Real World</h4>
-                        <p className="text-sm text-gray-400">Expansion into LATAM fiat-offramps. Allowing emerging market users to hold a censorship-resistant stablecoin shielded from local inflation.</p>
+                        <h4 className="text-xl font-bold text-white font-space-grotesk border-l-4 border-[#0a361c] pl-3">Phase 3: Real-World Penetration</h4>
+                        <p className="text-sm text-gray-400">Unlocking mass retail adoption by plugging directly into LATAM fiat-offramps, transforming the protocol from a DeFi instrument into a censorship-resistant daily currency.</p>
                     </div>
                 </div>
 
-                <div className="h-[300px] w-full bg-[#0A0A0A] border border-[#222222] rounded-2xl p-6">
+                <div className="h-[300px] w-full bg-[#0A0A0A] border border-[#222222] rounded-2xl p-6 relative overflow-hidden">
                     <h4 className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-4">TVL Projection (Millions $)</h4>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={gtmData}>
@@ -224,6 +224,51 @@ export default function PitchDeck() {
                             <Area type="monotone" dataKey="tvl" stroke="#00FF41" strokeWidth={3} fillOpacity={1} fill="url(#colorTvl)" />
                         </AreaChart>
                     </ResponsiveContainer>
+                </div>
+            </motion.section>
+
+            {/* SLIDE 5: Funding & Expansion Vision */}
+            <motion.section variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true }} className="bg-[#111111] border border-[#222222] rounded-3xl p-10">
+                <h2 className="text-3xl font-syncopate font-bold text-white mb-8 border-b border-[#222222] pb-4">
+                    5. Scale <span className="text-[#00FF41]">Objective</span>
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-6">
+                        <div className="border border-[#00FF41]/30 bg-[#00FF41]/5 p-6 rounded-2xl text-center shadow-[0_0_25px_rgba(0,255,65,0.1)] relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00FF41] to-transparent"></div>
+                            <span className="text-sm text-[#00FF41] font-bold uppercase tracking-widest block mb-2">Post-Audit Milestone (Year 1)</span>
+                            <div className="text-5xl font-black text-white my-2 font-syncopate">$2.73M <span className="text-xl text-gray-400">USD</span></div>
+                            <p className="text-xs text-gray-400 mt-3 font-mono">Precision focused: We require only 30 BTC to hit this exact threshold.</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-[#0A0A0A] p-5 rounded-xl border border-[#222222] text-center filter hover:border-[#00FF41]/40 transition-all">
+                                <span className="text-3xl font-bold text-white block mb-1">30 <span className="text-base text-gray-500">BTC</span></span>
+                                <span className="text-[10px] text-[#00FF41] uppercase tracking-widest font-bold">Total Capital Base</span>
+                            </div>
+                            <div className="bg-[#0A0A0A] p-5 rounded-xl border border-[#222222] text-center filter hover:border-[#00FF41]/40 transition-all">
+                                <span className="text-3xl font-bold text-white block mb-1">$70k</span>
+                                <span className="text-[10px] text-[#00FF41] uppercase tracking-widest font-bold">Median Benchmark</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold text-white uppercase tracking-widest font-space-grotesk flex items-center gap-2">
+                            <Globe className="text-[#00FF41]" size={20} /> Global Reach, Local Impact
+                        </h3>
+                        <p className="text-sm text-gray-400 leading-relaxed">
+                            Our ultimate catalyst for mass adoption is providing a direct, mathematical escape hatch from hyperinflation. By deploying deep, localized liquidity corridors in high-need economies, Grinta transitions from a decentralized protocol into a powerful real-world financial sanctuary.
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            {['ARGENTINA', 'BRASIL', 'CHILE', 'COLOMBIA', 'BOLIVIA', 'COSTA RICA', 'GUATEMALA', 'PANAMA', 'PARAGUAY', 'FILIPINAS', 'PERU', 'MEXICO'].map(country => (
+                                <span key={country} className="px-3 py-1.5 bg-[#0A0A0A] text-white border border-[#222222] hover:border-[#00FF41]/50 hover:text-[#00FF41] transition-colors rounded-lg text-[10px] font-bold tracking-widest font-space-grotesk">
+                                    {country}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </motion.section>
         </div>

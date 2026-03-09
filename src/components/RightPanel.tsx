@@ -152,27 +152,6 @@ export default function RightPanel() {
         </p>
       </a>
 
-      {/* SUPPORT US */}
-      <div className="p-5 rounded-[28px] bg-white/5 border border-white/5 hover:border-grinta-accent/30 transition-all group relative overflow-hidden shadow-lg">
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText('0x038d8939cb8b6f293630d3bfa90e8e097cfe16a03ee2c7186c5f597cbdac9c70');
-            alert(t('sidebar.copied'));
-          }}
-          className="absolute top-4 right-4 text-grinta-text-secondary group-hover:text-grinta-accent group-hover:scale-110 transition-all"
-          title="Copy Address"
-        >
-          <Copy size={16} />
-        </button>
-        <div className="flex items-center gap-3 mb-2">
-          <Disc size={16} className="text-grinta-text-secondary group-hover:text-grinta-accent" />
-          <span className="text-xs font-bold text-white uppercase tracking-wider">{t('sidebar.support')}</span>
-        </div>
-        <p className="text-[11px] text-grinta-text-secondary leading-tight mb-2">
-          {t('sidebar.support_desc')}
-        </p>
-      </div>
-
       {/* JOIN TELEGRAM COMMUNITY */}
       <a
         href="https://t.me/reflecterlabsproducts/2"

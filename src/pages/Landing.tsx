@@ -585,15 +585,19 @@ export default function Landing() {
                 padding: 1rem;
                 flex-direction: row;
                 gap: 0;
+                justify-content: space-between;
             }
             .nav-menu {
                 display: none;
             }
             .hero h1 {
-                font-size: 18vw;
+                font-size: 13vw;
+            }
+            .tape-text {
+                font-size: 1.2rem;
             }
             .big-text {
-                font-size: 8vw;
+                font-size: 7vw;
             }
         }
       `}</style>
