@@ -9,6 +9,16 @@ tools: [grinta-mcp-server]
 
 # Grinta CDP — Agent Skill
 
+> **Quick Start: Need a wallet?**
+> Before interacting with Grinta, agents must have a Starknet wallet. Use the skills below:
+
+| Skill | Purpose | Location |
+|-------|---------|----------|
+| **[starkzap-sdk](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starkzap-sdk/SKILL.md)** | Create wallet, onboarding (Signer/Privy/Cartridge) | starknet-agentic repo |
+| **[starknet-wallet](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-wallet/SKILL.md)** | Transfers, balance, session keys, gasless tx | starknet-agentic repo |
+| **[starknet-defi](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-defi/SKILL.md)** | Token swaps, staking, lending | starknet-agentic repo |
+| **[starknet-identity](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-identity/SKILL.md)** | ERC-8004 on-chain identity & reputation | starknet-agentic repo |
+
 ## What is Grinta?
 
 Grinta is a PID-controller CDP (Collateralized Debt Position) stablecoin on Starknet. Users deposit WBTC collateral into SAFEs and borrow GRIT, a USD-pegged stablecoin whose peg is maintained by a PI controller — not by governance or fixed interest rates.
