@@ -8,7 +8,7 @@
   [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
   [![Built with React](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 
-  [**Live Demo**]([https://mooltooj.vercel.app/](https://grinta-prototype-ui.vercel.app/)
+  [**Live Demo**] ([https://mooltooj.vercel.app/](https://grinta-prototype-ui.vercel.app/)
 
 ---
 
