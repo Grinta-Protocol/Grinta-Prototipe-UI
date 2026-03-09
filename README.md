@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center"></div>
   
   # ⚡ Grinta Protocol
   ### The First Agentic BTCFi Protocol on Starknet
