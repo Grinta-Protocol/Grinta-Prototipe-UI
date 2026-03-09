@@ -11,12 +11,28 @@ export default function AgentMarketing() {
     const { redemptionPrice, redemptionRate, loading: ratesLoading } = useRates();
     const { price: marketPrice, priceRaw: marketPriceRaw } = useMarketPrice();
 
-    const [currentDay, setCurrentDay] = useState(1);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentDay, setCurrentDay] = useState(() => Number(localStorage.getItem('grinta_agent_day')) || 1);
+    const [currentIndex, setCurrentIndex] = useState(() => Number(localStorage.getItem('grinta_agent_index')) || 0);
     const [isExecuting, setIsExecuting] = useState(false);
-    const [isAutoPilot, setIsAutoPilot] = useState(true);
-    const [timeLeft, setTimeLeft] = useState(AUTO_POST_INTERVAL);
-    const [publishedPosts, setPublishedPosts] = useState<{ id: string, text: string, time: string, phase: string }[]>([]);
+    const [isAutoPilot, setIsAutoPilot] = useState(() => {
+        const saved = localStorage.getItem('grinta_agent_autopilot');
+        return saved === null ? true : saved === 'true';
+    });
+
+    // Timer persistence: Store the target timestamp instead of just seconds
+    const [timeLeft, setTimeLeft] = useState(() => {
+        const target = localStorage.getItem('grinta_agent_next_post_time');
+        if (target) {
+            const remaining = Math.floor((Number(target) - Date.now()) / 1000);
+            return remaining > 0 ? remaining : AUTO_POST_INTERVAL;
+        }
+        return AUTO_POST_INTERVAL;
+    });
+
+    const [publishedPosts, setPublishedPosts] = useState<{ id: string, text: string, time: string, phase: string }[]>(() => {
+        const saved = localStorage.getItem('grinta_agent_posts');
+        return saved ? JSON.parse(saved) : [];
+    });
 
     const post = useMemo(() => generatePost(currentIndex, currentDay), [currentIndex, currentDay]);
 
@@ -27,7 +43,7 @@ export default function AgentMarketing() {
 
         // Construct enriched post with live metrics and URL
         const rPriceValue = parseFloat(redemptionPrice.split(' ')[0] || '1.0000');
-        const enrichedPost = `${post}\n\n📊 Protocol Status:\n• Market Price: $${parseFloat(marketPrice).toFixed(4)}\n• Redemption Price: $${rPriceValue.toFixed(4)}\n• Redemption Rate: ${redemptionRate}\n• BTC Index: $${(market.btcPrice || 0).toLocaleString()}\n\n🔗 Open Safe: https://grinta-prototype-ui.vercel.app/`;
+        const enrichedPost = `${post}\n\n📊 Protocol Status:\n• Market Price: $${parseFloat(marketPrice).toFixed(4)}\n• Redemption Price: $${rPriceValue.toFixed(4)}\n• Redemption Rate: ${redemptionRate}\n• BTC Index: $${(market.btcPrice || 0).toLocaleString()}\n\n💎 Support Grinta (Mainnet):\n• Starknet: 0x015E2c1491356cdF0621c573a82bc2A9Dd40790EE57f0c5e3705DFF400D97896\n• EVM: 0xc4eAb635B40bF49907375c3C7bd2495e3fDe79df\n\n🔗 Deep Dive (SKILL.md): https://grinta-prototype-ui.vercel.app/SKILL.md`;
 
         try {
             const response = await fetch('https://moltx.io/v1/posts', {
@@ -49,13 +65,29 @@ export default function AgentMarketing() {
                     phase: currentDay <= 10 ? 'RESEARCH' : currentDay <= 20 ? 'FEEDBACK' : 'ACTIVATION'
                 };
 
-                setPublishedPosts(prev => [newPost, ...prev].slice(0, 5));
-                setCurrentIndex(prev => prev + 1);
+                setPublishedPosts(prev => {
+                    const updated = [newPost, ...prev].slice(0, 10);
+                    localStorage.setItem('grinta_agent_posts', JSON.stringify(updated));
+                    return updated;
+                });
+
+                setCurrentIndex(prev => {
+                    const next = prev + 1;
+                    localStorage.setItem('grinta_agent_index', next.toString());
+                    return next;
+                });
+
                 if (currentIndex > 0 && currentIndex % 3 === 0) {
-                    setCurrentDay(d => Math.min(30, d + 1));
+                    setCurrentDay(d => {
+                        const nextDay = Math.min(30, d + 1);
+                        localStorage.setItem('grinta_agent_day', nextDay.toString());
+                        return nextDay;
+                    });
                 }
 
-                // Reset countdown
+                // Reset countdown and store target timestamp
+                const nextTime = Date.now() + (AUTO_POST_INTERVAL * 1000);
+                localStorage.setItem('grinta_agent_next_post_time', nextTime.toString());
                 setTimeLeft(AUTO_POST_INTERVAL);
             }
         } catch (error) {
@@ -67,20 +99,30 @@ export default function AgentMarketing() {
 
     // Auto-Pilot Timer Logic
     useEffect(() => {
+        localStorage.setItem('grinta_agent_autopilot', isAutoPilot.toString());
+
         let interval: NodeJS.Timeout;
         if (isAutoPilot && !isExecuting) {
+            // Ensure we have a target time
+            if (!localStorage.getItem('grinta_agent_next_post_time')) {
+                const nextTime = Date.now() + (timeLeft * 1000);
+                localStorage.setItem('grinta_agent_next_post_time', nextTime.toString());
+            }
+
             interval = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        handlePublish();
-                        return AUTO_POST_INTERVAL;
-                    }
-                    return prev - 1;
-                });
+                const target = Number(localStorage.getItem('grinta_agent_next_post_time'));
+                const remaining = Math.floor((target - Date.now()) / 1000);
+
+                if (remaining <= 0) {
+                    handlePublish();
+                    // handlePublish will set the next grinta_agent_next_post_time
+                } else {
+                    setTimeLeft(remaining);
+                }
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isAutoPilot, isExecuting, handlePublish]);
+    }, [isAutoPilot, isExecuting, handlePublish, timeLeft]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);

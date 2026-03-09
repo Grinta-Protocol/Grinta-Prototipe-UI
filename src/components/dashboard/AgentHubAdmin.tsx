@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAccount } from '@starknet-react/core';
-import { ShieldAlert, Lock, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, Lock, ArrowLeft, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AgentMarketing from './AgentMarketing';
 
@@ -62,15 +62,29 @@ export default function AgentHubAdmin() {
 
             <AgentMarketing />
 
-            <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
-                    <ShieldAlert size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+                        <ShieldAlert size={18} />
+                    </div>
+                    <div>
+                        <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Operational Security</h4>
+                        <p className="text-[11px] text-grinta-text-secondary font-medium">
+                            All automated propagations from this hub are signed and tracked. Campaign execution logs are archived in `agents/campaign/execution_log.md`.
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Operational Security</h4>
-                    <p className="text-[11px] text-grinta-text-secondary font-medium">
-                        All automated propagations from this hub are signed and tracked. Campaign execution logs are archived in `agents/campaign/execution_log.md`.
-                    </p>
+
+                <div className="p-6 bg-grinta-accent/5 border border-grinta-accent/10 rounded-3xl flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-grinta-accent/20 text-grinta-accent">
+                        <MessageSquare size={18} />
+                    </div>
+                    <div>
+                        <h4 className="text-[10px] font-black text-grinta-accent uppercase tracking-widest mb-1">Feedback Loop & Growth Strategy</h4>
+                        <p className="text-[11px] text-grinta-text-secondary font-medium">
+                            The campaign now prioritizes community feedback and project sustainability. Every post includes mainnet donation addresses (Starknet/EVM) and redirects agents directly to `SKILL.md` for deep technical onboarding.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

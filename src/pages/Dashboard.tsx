@@ -41,7 +41,7 @@ export default function Dashboard() {
                     <Route path="/metrics" element={<NetworkMetrics />} />
                     <Route path="/wallet" element={<WalletView />} />
                     <Route path="/papel" element={<PapelOficial />} />
-                    <Route path="/admin/agent-hub" element={<AgentHubAdmin />} />
+                    <Route path="/admin" element={<AgentHubAdmin />} />
                     <Route path="*" element={<Navigate to="/app/" replace />} />
                   </Routes>
                 </div>
