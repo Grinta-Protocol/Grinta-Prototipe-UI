@@ -1,5 +1,5 @@
-<div align="center">
-
+<div align="center"></div>
+  
   # ⚡ Grinta Protocol
   ### The First Agentic BTCFi Protocol on Starknet
 
@@ -8,8 +8,7 @@
   [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
   [![Built with React](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 
-  [**Live Demo**](https://mooltooj.vercel.app/) • [**Video Pitch**](https://x.com/reflecterlabs) • [**Smart Contracts**](https://sepolia.voyager.online/contract/0x02f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421)
-</div>
+  [**Live Demo**] (https://grinta-prototype-ui.vercel.app/)
 
 ---
 
