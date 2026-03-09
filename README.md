@@ -9,7 +9,8 @@
   [![Built with React](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 
   [**Live Demo**] (https://grinta-prototype-ui.vercel.app/)
-
+  
+</div>
 ---
 
 ## 📽️ Elevator Pitch
@@ -76,11 +77,8 @@ graph TD
 
 ---
 
-## 🤝 Team Reflecter Labs
-- **Lead Dev**: [GitHub Profile]
-- **Strategy Architect**: [GitHub Profile]
-
-**Special Thanks to Starknet Foundation and the Hackathon Mentors.**
+## 🤝 Special Thanks
+- **To Starknet Foundation and the Hackathon Mentors.**
 
 ---
 <div align="center">
