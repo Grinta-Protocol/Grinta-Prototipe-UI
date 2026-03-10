@@ -9,27 +9,37 @@ import { useTranslation } from 'react-i18next';
 
 export default function WalletView() {
     const { t } = useTranslation();
-    const { vaults, claimAllYield } = useVaults();
+    const { vaults, claimAllYield, starkzapWallet } = useVaults();
     const { address, isConnected } = useAccount();
     const { sendAsync, isPending } = useSendTransaction({});
     const { balance: wbtcBalance, refetch: refetchBalance } = useWbtcBalance();
 
     const [isMinting, setIsMinting] = useState(false);
 
+    const displayAddress = address || (starkzapWallet ? (starkzapWallet.address || starkzapWallet.account?.address) : undefined);
+    const isWalletConnected = (isConnected && address) || starkzapWallet;
+
     const totalUserYield = vaults.reduce((acc, v) => acc + v.yieldEarned, 0);
     const totalVaultDeposits = vaults.reduce((acc, v) => acc + v.amount, 0);
 
     const handleGetWbtc = async () => {
-        if (!address || isPending) return;
+        if (!displayAddress || (isPending && !starkzapWallet)) return;
         setIsMinting(true);
         try {
-            await sendAsync([
+            const calls = [
                 {
                     contractAddress: config.wbtcAddress,
                     entrypoint: 'mint',
-                    calldata: [address, '0x5f5e100', '0x0'], // 1.0 WBTC (8 decimals)
+                    calldata: [displayAddress, '0x5f5e100', '0x0'], // 1.0 WBTC (8 decimals)
                 }
-            ]);
+            ];
+
+            if (starkzapWallet) {
+                // Execute using StarkZap's gasless/sponsored capabilities if available
+                await starkzapWallet.execute(calls);
+            } else {
+                await sendAsync(calls);
+            }
             setTimeout(() => refetchBalance(), 3000);
         } catch (err) {
             console.error('Mint failed:', err);
@@ -61,10 +71,10 @@ export default function WalletView() {
                             </div>
                             <span className="text-xs font-bold text-grinta-text-secondary uppercase tracking-widest">WBTC (Faucet L2)</span>
                         </div>
-                        {isConnected && wbtcBalance === 0n && (
+                        {isWalletConnected && wbtcBalance === 0n && (
                             <button
                                 onClick={handleGetWbtc}
-                                disabled={isMinting || isPending}
+                                disabled={isMinting || (isPending && !starkzapWallet)}
                                 className="text-[10px] font-black bg-orange-500 text-black px-3 py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] flex items-center gap-1.5"
                             >
                                 {isMinting ? <Loader2 size={12} className="animate-spin" /> : <ArrowDownRight size={12} />}

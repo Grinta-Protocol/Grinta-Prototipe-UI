@@ -2,6 +2,10 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+import fs from 'fs';
+
+const cert = fs.readFileSync('./certs/cert.pem');
+const key = fs.readFileSync('./certs/key.pem');
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -18,6 +22,7 @@ export default defineConfig(({ mode }) => {
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== 'true',
+      https: { cert, key },
     },
     build: {
       target: 'esnext',

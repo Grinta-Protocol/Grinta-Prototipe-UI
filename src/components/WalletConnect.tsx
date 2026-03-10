@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Wallet, LogOut, ChevronDown, MousePointerClick, Bitcoin } from 'lucide-react';
+import { Wallet, LogOut, ChevronDown, MousePointerClick, Bitcoin, Mail, Globe } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from '@starknet-react/core';
 import { useTranslation } from 'react-i18next';
+import StarkZapOnboardingModal from './StarkZapOnboardingModal';
+import { useVaults } from '../context/VaultContext';
 
 interface WalletConnectProps {
     variant?: 'nav' | 'flow';
@@ -10,14 +12,18 @@ interface WalletConnectProps {
 
 export default function WalletConnect({ variant = 'nav', className = '' }: WalletConnectProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isZapModalOpen, setIsZapModalOpen] = useState(false);
     const { address, isConnected } = useAccount();
     const { connect, connectors } = useConnect();
     const { disconnect } = useDisconnect();
     const { t } = useTranslation();
+    const { starkzapWallet, setStarkzapWallet } = useVaults();
 
-    const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+    const displayAddress = address || (starkzapWallet ? (starkzapWallet.address || starkzapWallet.account?.address) : undefined);
+    const shortAddress = displayAddress ? `${displayAddress.slice(0, 6)}...${displayAddress.slice(-4)}` : (starkzapWallet ? 'StarkZap' : '');
+    const isWalletConnected = (isConnected && address) || starkzapWallet;
 
-    if (isConnected && address) {
+    if (isWalletConnected) {
         return (
             <div className={`relative ${className}`}>
                 <button
@@ -37,6 +43,7 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                         <button
                             onClick={() => {
                                 disconnect();
+                                setStarkzapWallet(null);
                                 setIsOpen(false);
                             }}
                             className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-500/10 rounded-xl transition-colors text-red-500 font-bold text-xs"
@@ -66,6 +73,24 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
 
             {isOpen && (
                 <div className={`absolute top-full right-0 mt-2 w-64 bg-[#0D0F10] border border-white/10 rounded-3xl p-3 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in duration-200`}>
+                    <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">Create Wallet (Web2)</div>
+                    <div className="space-y-1 mb-4">
+                        <button
+                            onClick={() => {
+                                setIsOpen(false);
+                                setIsZapModalOpen(true);
+                            }}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white text-black hover:bg-white/90 rounded-2xl transition-all group font-bold text-xs"
+                        >
+                            <span className="flex items-center gap-2">
+                                <Globe size={16} /> Email / Social
+                            </span>
+                            <span className="text-[9px] font-black bg-black/10 px-2 py-0.5 rounded-full uppercase">StarkZap</span>
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-white/5 my-3 mx-2"></div>
+
                     <div className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] mb-3 px-3">{t('wallet.choose')}</div>
                     <div className="space-y-1">
                         {connectors.map((connector) => (
@@ -117,6 +142,7 @@ export default function WalletConnect({ variant = 'nav', className = '' }: Walle
                     </button>
                 </div>
             )}
+            <StarkZapOnboardingModal isOpen={isZapModalOpen} onClose={() => setIsZapModalOpen(false)} />
         </div>
     );
 }

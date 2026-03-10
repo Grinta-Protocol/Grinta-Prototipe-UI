@@ -54,6 +54,9 @@ interface VaultContextType {
     repayGrit: (id: string, amount: number) => void;
     startNewFlow: () => void;
     market: MarketState;
+    claimAllYield: () => void;
+    starkzapWallet: any | null;
+    setStarkzapWallet: (wallet: any | null) => void;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
@@ -64,6 +67,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     const [balanceL1, setBalanceL1] = useState(10.5); // Initial simulated L1 balance
     const [balanceL2, setBalanceL2] = useState(0);
     const [activeVaultId, setActiveVaultId] = useState<string | null>(null);
+    const [starkzapWallet, setStarkzapWallet] = useState<any | null>(null);
 
     const [market, setMarket] = useState<MarketState>({
         btcPrice: 0,
@@ -187,7 +191,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <VaultContext.Provider value={{
-            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, depositToVault, withdrawFromVault, borrowGrit, repayGrit, startNewFlow, market, claimAllYield
+            step, setStep, vaults, balanceL1, setBalanceL1, balanceL2, setBalanceL2, activeVaultId, setActiveVaultId, addVault, updateVault, depositToVault, withdrawFromVault, borrowGrit, repayGrit, startNewFlow, market, claimAllYield, starkzapWallet, setStarkzapWallet
         }}>
             {children}
         </VaultContext.Provider>
