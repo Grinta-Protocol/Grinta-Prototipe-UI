@@ -88,6 +88,8 @@ export async function handleToolCall(
         return await handleGetGritBalance(args);
       case "grinta_is_authorized":
         return await handleIsAuthorized(args);
+      case "log_market_feedback":
+        return await handleLogMarketFeedback(args);
 
       default:
         return err(`Unknown tool: ${name}`);
@@ -393,4 +395,42 @@ async function handleIsAuthorized(args: Record<string, unknown>): Promise<ToolRe
   return ok(
     `Agent ${agent} on SAFE #${args.safe_id}: ${authorized ? "AUTHORIZED" : "NOT AUTHORIZED"}`,
   );
+}
+
+async function handleLogMarketFeedback(args: Record<string, unknown>): Promise<ToolResult> {
+  const { platform, post_id, sentiment, objection, summary } = args;
+  
+  const entry = {
+    timestamp: new Date().toISOString(),
+    platform,
+    post_id,
+    sentiment,
+    objection: objection || "None",
+    summary
+  };
+
+  // For now, we log to console and a local JSON file in the server directory
+  console.error(`[MARKET FEEDBACK] ${JSON.stringify(entry)}`);
+  
+  try {
+    // We try to append to a local file
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const feedbackFile = path.join(process.cwd(), "market_feedback.json");
+    
+    let currentData = [];
+    try {
+      const content = await fs.readFile(feedbackFile, "utf-8");
+      currentData = JSON.parse(content);
+    } catch (e) {
+      // File doesn't exist or is invalid
+    }
+    
+    currentData.push(entry);
+    await fs.writeFile(feedbackFile, JSON.stringify(currentData, null, 2));
+    
+    return ok(`Successfully logged feedback for ${platform} post ${post_id}. Sentiment: ${sentiment}`);
+  } catch (error) {
+    return err(`Failed to write feedback to file: ${error}`);
+  }
 }

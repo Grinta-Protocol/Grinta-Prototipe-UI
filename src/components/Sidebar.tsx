@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText, Github, Send, ExternalLink, Linkedin } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Wallet, Twitter, Disc, PlusCircle, FileText, Github, Send, ExternalLink, Linkedin, Check } from 'lucide-react';
 import { useAccount } from '@starknet-react/core';
 import { useVaults } from '../context/VaultContext';
 import { useTranslation } from 'react-i18next';
@@ -16,13 +16,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const location = useLocation();
   const { isConnected } = useAccount();
   const { step, setStep, startNewFlow, vaults } = useVaults();
+  const [starknetCopied, setStarknetCopied] = React.useState(false);
+  const [evmCopied, setEvmCopied] = React.useState(false);
 
   const isFlowActive = ['connect', 'fund', 'deposit', 'create_vault'].includes(step);
 
   const handleNavigation = (e: React.MouseEvent, path: string) => {
     if (step === 'vault_view') {
       setStep('main_dashboard');
-      return;
+      // Allow the Link to navigate normally — no return here
     }
 
     if (isFlowActive) {
@@ -125,12 +127,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     onClick={(e) => {
                       e.stopPropagation();
                       navigator.clipboard.writeText('0x015E2c1491356cdF0621c573a82bc2A9Dd40790EE57f0c5e3705DFF400D97896');
-                      alert('Copied Starknet address');
+                      setStarknetCopied(true);
+                      setTimeout(() => setStarknetCopied(false), 2000);
                     }}
                     className="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-grinta-text-secondary hover:text-white transition-colors"
                     title="Copy Starknet Address"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                    {starknetCopied ? <Check size={10} className="text-grinta-accent" /> : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                    )}
                   </button>
                 </div>
 
@@ -143,12 +148,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     onClick={(e) => {
                       e.stopPropagation();
                       navigator.clipboard.writeText('0xc4eAb635B40bF49907375c3C7bd2495e3fDe79df');
-                      alert('Copied EVM address');
+                      setEvmCopied(true);
+                      setTimeout(() => setEvmCopied(false), 2000);
                     }}
                     className="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-grinta-text-secondary hover:text-white transition-colors"
                     title="Copy EVM Address"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                    {evmCopied ? <Check size={10} className="text-grinta-accent" /> : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                    )}
                   </button>
                 </div>
               </div>

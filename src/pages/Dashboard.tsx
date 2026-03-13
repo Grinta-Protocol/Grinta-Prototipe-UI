@@ -45,7 +45,7 @@ export default function Dashboard() {
         <div className="flex-1 flex px-4 lg:px-12 pb-0 gap-6 lg:gap-12 overflow-hidden w-full max-w-full">
           {/* Central Column - The ONLY scrolling part */}
           <div className={`flex-1 overflow-y-auto no-scrollbar pb-24 w-full ${step === 'main_dashboard' ? '' : 'flex flex-col items-center justify-start'}`}>
-            {/* Margen superior solo para la columna central en Desktop */}
+            {/* Top margin for the central column on Desktop */}
             <div className="hidden lg:block h-12 w-full flex-shrink-0"></div>
 
             <div className={`w-full ${step === 'main_dashboard' ? 'max-w-7xl mx-auto' : ''}`}>
@@ -68,8 +68,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right Column - Fixed */}
-          <div className="hidden lg:block w-80 pt-2 pb-24 overflow-y-auto no-scrollbar">
+          {/* Right Column - Fixed, hidden on smaller screens */}
+          <div className="hidden xl:block w-80 pt-2 pb-24 overflow-y-auto no-scrollbar">
             <RightPanel />
           </div>
         </div>

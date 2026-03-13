@@ -13,6 +13,7 @@ export default function RightPanel() {
   const [langOpen, setLangOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [supportCopied, setSupportCopied] = useState(false);
   const { market } = useVaults();
   const { redemptionPrice, redemptionRate, collateralPrice, liquidationRatio, loading } = useRates();
   const { price: btcPrice } = useBitcoinPrice();
@@ -151,6 +152,8 @@ export default function RightPanel() {
           {t('sidebar.feedback_desc')}
         </p>
       </a>
+
+
 
       {/* JOIN TELEGRAM COMMUNITY */}
       <a

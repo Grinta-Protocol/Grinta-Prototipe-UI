@@ -154,5 +154,147 @@
       "waiting_txs": "Esperando transacciones...",
       "agent_monitoring": "AGENTE ACTIVO: MONITOREANDO LIQUIDEZ EKUBO"
     }
+  },
+  "admin": {
+    "access_denied": "Acceso Denegado",
+    "restricted_desc": "Esta capa de orquestación está aislada. Solo los operadores autorizados de Grinta Protocol pueden acceder al Control del Hub Agéntico.",
+    "return_to_dash": "Volver al Dashboard",
+    "connected": "CONECTADO",
+    "hub_control": "Control del Hub Agéntico",
+    "restricted_manager": "Acceso de Manager Restringido"
+  },
+  "pitch_deck": {
+    "market": {
+      "tam": "TAM (Global Stablecoins)",
+      "sam": "SAM (Crypto-Native CDP)",
+      "som": "SOM (Objetivo Grinta)"
+    },
+    "slide1": {
+      "title_prefix": "El Problema y",
+      "title_suffix": "Nuestra Solución",
+      "problem_title": "Paradigma Actual",
+      "problem1_title": "La Trampa de la Centralización",
+      "problem1_desc": "Las stablecoins actuales dependen de puntos de estrangulamiento fiduciarios custodiales u oráculos centralizados fácilmente manipulables.",
+      "problem2_title": "Parálisis de Gobernanza",
+      "problem2_desc": "Las DAOs lentas, dirigidas por humanos, son inherentemente incapaces de reaccionar a la volatilidad del mercado en sub-segundos.",
+      "problem3_title": "Capital Profundo Inactivo",
+      "problem3_desc": "Más de $1.3 billones en Bitcoin están latentes, careciendo de una vía nativa y minimizada en confianza para generar yield.",
+      "solution_title": "Grinta Protocol",
+      "sol1_title": "Estabilidad Matemática",
+      "sol1_desc": "Mecanismo de controlador PID Autónomo.",
+      "sol2_title": "Agéntico Primero",
+      "sol2_desc": "Diseñado para la interacción de IA vía MCP.",
+      "sol3_title": "Eficiencia de Capital",
+      "sol3_desc": "Desbloquea WBTC con apalancamiento dinámico.",
+      "sol4_title": "Inmutable",
+      "sol4_desc": "Sin keepers. Sin wrappers de gobernanza."
+    },
+    "slide2": {
+      "title": "¿Por Qué Ahora?",
+      "point1_title": "El Catalizador MiCA",
+      "point1_desc": "Las estrictas regulaciones globales están forzando un cambio masivo de capital de pagarés respaldados por fiat a stablecoins algorítmicas.",
+      "point2_title": "La Economía Agéntica",
+      "point2_desc": "La madurez de Starknet y la explosión de agentes de IA autónomos exigen una base financiera construida para la interacción programática.",
+      "point3_title": "Matemáticas Probadas",
+      "point3_desc": "Los controladores PID han sido probados en situaciones de estrés extremo. Grinta es el primero en aplicar esto estrictamente a Bitcoin.",
+      "zap_title": "Escasez de Liquidez Post-Halving",
+      "zap_desc": "Las instituciones y minoristas retienen BTC firmemente. Necesitan liquidez sin disparar eventos fiscales. Grinta proporciona ese puente matemático."
+    },
+    "slide3": {
+      "title_prefix": "Oportunidad de",
+      "title_suffix": "Mercado",
+      "market_size": "Tamaño del Mercado",
+      "som_label": "SOM (Objetivo)",
+      "projected_revenue": "Ingresos Proyectados del Protocolo",
+      "arr": "ARR",
+      "revenue_desc": "Capturado a través de tarifas de estabilidad integradas directamente en el controlador PID.",
+      "target1_title": "Whales Crypto",
+      "target1_desc": "Liquidez libre de impuestos sobre grandes posiciones BTC.",
+      "target2_title": "Agentes IA / DAOs",
+      "target2_desc": "Gestión autónoma de vaults."
+    },
+    "slide4": {
+      "title_prefix": "Ejecución y Plan de",
+      "title_suffix": "Adopción",
+      "phase1_title": "Fase 1: Bootstrapping Autónomo",
+      "phase1_desc": "Activando liquidez inicial a través de redes agénticas. Estableciendo la primera generación de despliegues gestionados por IA.",
+      "phase2_title": "Fase 2: Integración Profunda del Protocolo",
+      "phase2_desc": "Integrando GRIT directamente en los principales DEXs de Starknet para capturar eficiencia de capital e incentivar pools de arbitraje.",
+      "phase3_title": "Fase 3: Penetración en el Mundo Real",
+      "phase3_desc": "Desbloqueando la adopción masiva conectándose directamente con rampas fiat de LATAM, transformando el protocolo en una moneda diaria.",
+      "tvl_label": "Proyección de TVL (Millones $)"
+    },
+    "slide5": {
+      "title_prefix": "Objetivo de",
+      "title_suffix": "Escala",
+      "milestone": "Hito Post-Auditoría (Año 1)",
+      "usd": "USD",
+      "precision": "Foco en precisión: Solo requerimos 30 BTC para alcanzar este umbral exacto.",
+      "capital_base": "Base de Capital Total",
+      "benchmark": "Benchmark Mediano",
+      "global_reach": "Alcance Global, Impacto Local",
+      "catalyst_desc": "Nuestra misión es proporcionar una vía de escape matemática directa de la hiperinflación. Al desplegar corredores de liquidez localizados, Grinta se convierte en un santuario financiero real."
+    }
+  },
+  "starkzap": {
+    "sdk_badge": "Integración Oficial del SDK",
+    "hero_desc": "Trae Bitcoin, Stablecoins y DeFi a tu app en minutos. Un SDK de TypeScript para billeteras, tokens, staking y transacciones sin gas.",
+    "tools": {
+      "social": "Login Social",
+      "social_desc": "Sin frases semilla",
+      "gasless": "Sin Gas",
+      "gasless_desc": "Flujos de Paymaster",
+      "staking": "Staking de BTC",
+      "staking_desc": "Rendimiento Nativo",
+      "zap": "Zap Atómico",
+      "zap_desc": "DeFi en un clic"
+    },
+    "social": {
+      "title": "Experiencia Web2",
+      "desc": "Conecta usuarios a través de sus redes sociales favoritas.",
+      "email": "Continuar con Email",
+      "google": "Continuar con Google",
+      "twitter": "Continuar con Twitter",
+      "github": "Continuar con Github",
+      "passkey": "Protección por Passkey",
+      "passkey_desc": "Integrado con Cartridge Controller. Encriptación biométrica para cada transacción sin sacrificar la custodia."
+    },
+    "gasless": {
+      "title": "Protocolo Sin Gas",
+      "desc": "Oculta la complejidad de las tarifas a tus usuarios.",
+      "avnu": "Paymaster AVNU",
+      "sponsoring": "Patrocinio activo",
+      "custom": "Paymaster de Token Personalizado",
+      "grit_alpha": "Paga con GRIT (Alpha)"
+    },
+    "status": {
+      "live": "En Vivo"
+    },
+    "staking": {
+      "title": "Staking de Bitcoin",
+      "yield": "Rendimiento Nativo",
+      "apy": "APY",
+      "start": "Empezar Staking",
+      "min": "Depósito Mín.",
+      "unlock": "Periodo de Desbloqueo",
+      "liquid": "Ninguno (Líquido)",
+      "safety": "Puntaje de Seguridad"
+    },
+    "zap": {
+      "title": "Motor Atómico",
+      "router": "Router"
+    },
+    "stats": {
+      "title": "Seguridad y Red",
+      "latency": "Latencia Starknet",
+      "node": "Proveedor de Nodo",
+      "paymaster": "Créditos Paymaster",
+      "sdk_detected": "SDK StarkZap v2.4.0 detectado. Todos los módulos operan con normalidad."
+    },
+    "activity": {
+      "title": "Actividad en Vivo",
+      "desc": "Monitoreando zaps cross-chain en Starknet Mainnet y Sepolia.",
+      "detected_via": "detectado vía"
+    }
   }
 }

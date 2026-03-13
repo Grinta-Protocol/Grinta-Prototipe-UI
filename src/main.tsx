@@ -6,6 +6,7 @@ import App from './App.tsx';
 import './index.css';
 import './i18n';
 
+
 const RPC_URL = import.meta.env.VITE_STARKNET_RPC_URL || 'https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_10/A_aQEk8ItXSiyZveFp_6y';
 
 const sepoliaFixed = {
@@ -26,7 +27,7 @@ const provider = jsonRpcProvider({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StarknetConfig chains={chains} provider={provider} connectors={connectors} explorer={voyager}>
+    <StarknetConfig chains={chains} provider={provider} connectors={connectors} explorer={voyager} autoConnect={true}>
       <App />
     </StarknetConfig>
   </StrictMode>,

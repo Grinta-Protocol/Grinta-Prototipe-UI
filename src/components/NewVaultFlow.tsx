@@ -108,16 +108,22 @@ export default function NewVaultFlow() {
         }
     }, [step, isConnected, refetchBalance]);
 
-    // Redirección automática si no hay fondos en el paso de Deposit
+    // Only redirect from deposit -> fund if balance is confirmed loaded AND zero
+    // AND not currently processing minting
+    const [hasAttemptedDeposit, setHasAttemptedDeposit] = useState(false);
     useEffect(() => {
-        if (step === 'deposit' && !balanceLoading && wbtcBalance === 0n) {
+        if (step === 'deposit' && !balanceLoading && wbtcBalance === 0n && !hasAttemptedDeposit) {
+            setHasAttemptedDeposit(true);
             if (isConnected) {
                 setStep('fund');
             } else {
                 setStep('connect');
             }
         }
-    }, [step, wbtcBalance, balanceLoading, isConnected, setStep]);
+        if (step === 'fund') {
+            setHasAttemptedDeposit(false);
+        }
+    }, [step, wbtcBalance, balanceLoading, isConnected, setStep, hasAttemptedDeposit]);
 
     const handleConnectorClick = (connector: any) => {
         setConnectingWallet(true);
@@ -647,7 +653,7 @@ export default function NewVaultFlow() {
                                 className="px-16 py-6 rounded-3xl bg-grinta-accent text-black font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-grinta-accent/20 uppercase tracking-widest flex items-center gap-3"
                             >
                                 <PlusCircle size={24} />
-                                Activar Vault
+                                {t('new_vault.strategy.activate_vault', 'Activate Vault')}
                             </button>
                         </div>
                     </motion.div>

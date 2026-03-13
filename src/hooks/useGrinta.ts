@@ -15,6 +15,7 @@ import {
   formatWad,
 } from "../lib/starknet";
 
+
 // ─── System Rates (read from SafeEngine via direct RPC) ───
 
 export interface RatesData {
@@ -128,6 +129,9 @@ export function useUserSafes() {
 
     setDebug("fetching...");
     setIsLoading(true);
+
+
+
     try {
       const engine = getSafeEngine();
       const count = await engine.get_safe_count();
@@ -142,7 +146,6 @@ export function useUserSafes() {
           const userHex = "0x" + BigInt(address).toString(16);
           if (ownerHex === userHex) {
             const safe = await engine.get_safe(id);
-            console.log("SAFE DATA", id, safe);
             const health = await engine.get_safe_health(id);
             userSafes.push({
               id,
@@ -154,6 +157,7 @@ export function useUserSafes() {
             });
           }
         } catch (err) {
+          console.error(`safe ${id} error:`, err);
           setDebug(`safe ${id} error: ${(err as Error).message}`);
         }
       }
@@ -161,6 +165,7 @@ export function useUserSafes() {
       setDebug(`found ${userSafes.length} safes`);
       setSafes(userSafes);
     } catch (err) {
+      console.error("fetchSafes error:", err);
       setDebug(`fetchSafes error: ${(err as Error).message}`);
       setSafes([]);
     } finally {

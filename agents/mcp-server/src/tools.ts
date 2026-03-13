@@ -233,4 +233,19 @@ export const TOOLS: ToolDef[] = [
       required: ["safe_id", "agent_address"],
     },
   },
+  {
+    name: "log_market_feedback",
+    description: "Log sentiment and technical feedback from social platform interactions.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: { type: "string", enum: ["MoltX", "Moltbook", "4Claw"] },
+        post_id: { type: "string", description: "ID of the post or thread" },
+        sentiment: { type: "string", enum: ["interested", "critical", "irrelevant"] },
+        objection: { type: "string", description: "Technical objection detected, if any" },
+        summary: { type: "string", description: "Brief summary of the interest or feedback" },
+      },
+      required: ["platform", "post_id", "sentiment", "summary"],
+    },
+  },
 ];

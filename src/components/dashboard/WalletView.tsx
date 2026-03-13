@@ -68,7 +68,7 @@ export default function WalletView() {
                                 className="text-[10px] font-black bg-orange-500 text-black px-3 py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] flex items-center gap-1.5"
                             >
                                 {isMinting ? <Loader2 size={12} className="animate-spin" /> : <ArrowDownRight size={12} />}
-                                SOLICITAR WBTC
+                                WBTC Faucet
                             </button>
                         )}
                     </div>
@@ -82,7 +82,7 @@ export default function WalletView() {
                 </div>
 
                 <BalanceCard
-                    label="BTC en Vaults (L2)"
+                    label={t('wallet.btc_in_vaults', 'BTC in Vaults (L2)')}
                     amount={totalVaultDeposits}
                     unit="BTC"
                     icon={<CreditCard size={24} className="text-grinta-accent" />}
@@ -102,12 +102,12 @@ export default function WalletView() {
                 <div className="absolute inset-0 bg-gradient-to-r from-grinta-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                     <div>
-                        <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-2">Accumulated Yield</h3>
+                        <h3 className="text-sm font-bold text-grinta-text-secondary uppercase tracking-widest mb-2">{t('wallet.accumulated_yield', 'Accumulated Yield')}</h3>
                         <div className="flex items-baseline gap-3">
                             <span className="text-5xl font-extrabold text-white">+{totalUserYield.toFixed(6)}</span>
                             <span className="text-2xl font-bold text-grinta-accent">BTC</span>
                         </div>
-                        <p className="text-grinta-text-secondary text-sm mt-4">Disponible para reclamar instantáneamente a L2.</p>
+                        <p className="text-grinta-text-secondary text-sm mt-4">{t('wallet.claim_desc', 'Available to claim instantly to L2.')}</p>
                     </div>
 
                     <button
@@ -115,7 +115,7 @@ export default function WalletView() {
                         disabled={totalUserYield <= 0}
                         className="px-8 py-5 bg-grinta-accent text-black font-bold text-lg rounded-[20px] hover:scale-105 transition-all shadow-[0_10px_30px_rgba(74,222,128,0.3)] disabled:opacity-50 disabled:grayscale disabled:scale-100 flex items-center gap-3"
                     >
-                        RECLAMAR YIELD
+                        {t('wallet.claim_yield', 'CLAIM YIELD')}
                         <ArrowUpRight size={24} />
                     </button>
                 </div>
@@ -129,7 +129,7 @@ export default function WalletView() {
                             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-grinta-text-secondary opacity-30 mb-4">
                                 <Wallet size={32} />
                             </div>
-                            <p className="text-sm text-grinta-text-secondary">No registered transactions.<br />Your deposits and Vault operations will appear here.</p>
+                            <p className="text-sm text-grinta-text-secondary">{t('wallet.no_transactions', 'No registered transactions.')}<br />{t('wallet.transactions_appear', 'Your deposits and Vault operations will appear here.')}</p>
                         </div>
                     ) : (
                         vaults.map((v, i) => (
@@ -139,13 +139,13 @@ export default function WalletView() {
                                         <ArrowDownRight size={20} />
                                     </div>
                                     <div>
-                                        <div className="text-sm font-bold text-white">Deposit in Vault {v.id}</div>
-                                        <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">Exitoso • L2 Network</div>
+                                        <div className="text-sm font-bold text-white">{t('wallet.deposit_in', 'Deposit in Vault')} {v.id}</div>
+                                        <div className="text-[10px] text-grinta-text-secondary uppercase tracking-wide">{t('wallet.successful', 'Successful')} • L2 Network</div>
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="text-sm font-bold text-white">-{v.amount.toFixed(2)} WBTC</div>
-                                    <div className="text-[10px] text-grinta-text-secondary">Justo ahora</div>
+                                    <div className="text-[10px] text-grinta-text-secondary">{t('wallet.just_now', 'Just now')}</div>
                                 </div>
                             </div>
                         ))

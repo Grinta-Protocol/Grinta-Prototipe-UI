@@ -4,7 +4,20 @@ dist/
 coverage/
 .DS_Store
 *.log
+
+# Variables de entorno — raíz
 .env*
 !.env.example
+
+# Archivos sensibles dentro de agents/ 
+# (credentials, keys — nunca al repo)
+agents/**/.env
+agents/**/.env.*
+agents/**/credentials.json
+agents/**/keystore.json
+agents/**/*.key
+agents/**/*.pem
+agents/**/secret*.json
+agents/**/*.secret
 
 .vercel

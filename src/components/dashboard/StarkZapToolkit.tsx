@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, ArrowRight, RefreshCw, Key, ShieldCheck, ExternalLink, Activity, Info, LogIn, Mail, Twitter, Github, MousePointer2, CreditCard, Bitcoin, Globe, Lock, Layers } from 'lucide-react';
+import { Zap, ArrowRight, RefreshCw, Key, ShieldCheck, ExternalLink, Activity, Info, LogIn, Mail, Twitter, Github, MousePointer, CreditCard, Bitcoin, Globe, Lock, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -22,11 +22,13 @@ export default function StarkZapToolkit() {
                     </div>
                     <div className="text-center md:text-left">
                         <div className="flex items-center gap-3 mb-2 justify-center md:justify-start">
-                            <span className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">Official SDK Integration</span>
+                            <span className="px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">
+                                {t('starkzap.sdk_badge', 'Official SDK Integration')}
+                            </span>
                         </div>
                         <h2 className="text-5xl font-black text-white uppercase tracking-tighter mb-4 leading-none font-syncopate">StarkZap Core</h2>
                         <p className="text-grinta-text-secondary text-lg max-w-xl font-medium leading-relaxed opacity-70">
-                            Bring Bitcoin, Stablecoins, and DeFi to your app in minutes. One TypeScript SDK for wallets, tokens, staking, and gasless transactions.
+                            {t('starkzap.hero_desc', 'Bring Bitcoin, Stablecoins, and DeFi to your app in minutes. One TypeScript SDK for wallets, tokens, staking, and gasless transactions.')}
                         </p>
                     </div>
                 </div>
@@ -38,29 +40,29 @@ export default function StarkZapToolkit() {
                     active={selectedTool === 'social'}
                     onClick={() => setSelectedTool('social')}
                     icon={<LogIn size={20} />}
-                    label="Social Login"
-                    desc="No seed phrases"
+                    label={t('starkzap.tools.social', 'Social Login')}
+                    desc={t('starkzap.tools.social_desc', 'No seed phrases')}
                 />
                 <FeatureTab
                     active={selectedTool === 'gasless'}
                     onClick={() => setSelectedTool('gasless')}
-                    icon={<MousePointer2 size={20} />}
-                    label="Gasless"
-                    desc="Paymaster flows"
+                    icon={<MousePointer size={20} />}
+                    label={t('starkzap.tools.gasless', 'Gasless')}
+                    desc={t('starkzap.tools.gasless_desc', 'Paymaster flows')}
                 />
                 <FeatureTab
                     active={selectedTool === 'staking'}
                     onClick={() => setSelectedTool('staking')}
                     icon={<Bitcoin size={20} />}
-                    label="BTC Staking"
-                    desc="Native yield"
+                    label={t('starkzap.tools.staking', 'BTC Staking')}
+                    desc={t('starkzap.tools.staking_desc', 'Native yield')}
                 />
                 <FeatureTab
                     active={selectedTool === 'zap'}
                     onClick={() => setSelectedTool('zap')}
                     icon={<Layers size={20} />}
-                    label="Atomic Zap"
-                    desc="One-click DeFi"
+                    label={t('starkzap.tools.zap', 'Atomic Zap')}
+                    desc={t('starkzap.tools.zap_desc', 'One-click DeFi')}
                 />
             </div>
 
@@ -71,8 +73,8 @@ export default function StarkZapToolkit() {
                         <div className="bg-[#0A0A0A] border border-white/5 rounded-[40px] p-10 shadow-2xl animate-in slide-in-from-left-8 duration-500">
                             <div className="flex items-center justify-between mb-10">
                                 <div>
-                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Web2 Experience</h3>
-                                    <p className="text-grinta-text-secondary text-sm font-medium">Connect users via their favorite social platforms.</p>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{t('starkzap.social.title', 'Web2 Experience')}</h3>
+                                    <p className="text-grinta-text-secondary text-sm font-medium">{t('starkzap.social.desc', 'Connect users via their favorite social platforms.')}</p>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-orange-500/10 text-orange-500">
                                     <Key size={24} />
@@ -80,10 +82,10 @@ export default function StarkZapToolkit() {
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <SocialButton icon={<Mail size={18} />} label="Continue with Email" color="bg-white/5 hover:bg-white/10" />
-                                <SocialButton icon={<Globe size={18} />} label="Continue with Google" color="bg-white/5 hover:bg-white/10" />
-                                <SocialButton icon={<Twitter size={18} />} label="Continue with Twitter" color="bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 text-[#1DA1F2]" />
-                                <SocialButton icon={<Github size={18} />} label="Continue with Github" color="bg-white/5 hover:bg-white/10" />
+                                <SocialButton icon={<Mail size={18} />} label={t('starkzap.social.email', 'Continue with Email')} color="bg-white/5 hover:bg-white/10" />
+                                <SocialButton icon={<Globe size={18} />} label={t('starkzap.social.google', 'Continue with Google')} color="bg-white/5 hover:bg-white/10" />
+                                <SocialButton icon={<Twitter size={18} />} label={t('starkzap.social.twitter', 'Continue with Twitter')} color="bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 text-[#1DA1F2]" />
+                                <SocialButton icon={<Github size={18} />} label={t('starkzap.social.github', 'Continue with Github')} color="bg-white/5 hover:bg-white/10" />
                             </div>
 
                             <div className="mt-10 p-6 rounded-3xl bg-orange-500/5 border border-orange-500/10">
@@ -92,8 +94,8 @@ export default function StarkZapToolkit() {
                                         <ShieldCheck size={16} />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-white mb-1">Passkey Protection</h4>
-                                        <p className="text-xs text-grinta-text-secondary leading-relaxed">Integrated with Cartridge Controller. Biometric encryption for every transaction without sacrificing self-custody.</p>
+                                        <h4 className="text-sm font-bold text-white mb-1">{t('starkzap.social.passkey', 'Passkey Protection')}</h4>
+                                        <p className="text-xs text-grinta-text-secondary leading-relaxed">{t('starkzap.social.passkey_desc', 'Integrated with Cartridge Controller. Biometric encryption for every transaction without sacrificing self-custody.')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -104,8 +106,8 @@ export default function StarkZapToolkit() {
                         <div className="bg-[#0A0A0A] border border-white/5 rounded-[40px] p-10 shadow-2xl animate-in slide-in-from-right-8 duration-500">
                             <div className="flex items-center justify-between mb-10">
                                 <div>
-                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Gasless Protocol</h3>
-                                    <p className="text-grinta-text-secondary text-sm font-medium">Hide fee complexity from your users.</p>
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{t('starkzap.gasless.title', 'Gasless Protocol')}</h3>
+                                    <p className="text-grinta-text-secondary text-sm font-medium">{t('starkzap.gasless.desc', 'Hide fee complexity from your users.')}</p>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-purple-500/10 text-purple-400">
                                     <Lock size={24} />
@@ -119,13 +121,13 @@ export default function StarkZapToolkit() {
                                             <CreditCard size={20} />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-bold text-white">AVNU Paymaster</div>
-                                            <div className="text-[10px] font-bold text-grinta-text-secondary uppercase">Sponsoring active</div>
+                                            <div className="text-sm font-bold text-white">{t('starkzap.gasless.avnu', 'AVNU Paymaster')}</div>
+                                            <div className="text-[10px] font-bold text-grinta-text-secondary uppercase">{t('starkzap.gasless.sponsoring', 'Sponsoring active')}</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
-                                        <span className="text-[10px] font-black text-orange-500 uppercase">Live</span>
+                                        <span className="text-[10px] font-black text-orange-500 uppercase">{t('starkzap.status.live', 'Live')}</span>
                                     </div>
                                 </div>
                                 <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 opacity-50">
@@ -134,8 +136,8 @@ export default function StarkZapToolkit() {
                                             <CreditCard size={20} />
                                         </div>
                                         <div>
-                                            <div className="text-sm font-bold text-white/30">Custom Token Paymaster</div>
-                                            <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Pay with GRIT (Alpha)</div>
+                                            <div className="text-sm font-bold text-white/30">{t('starkzap.gasless.custom', 'Custom Token Paymaster')}</div>
+                                            <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest">{t('starkzap.gasless.grit_alpha', 'Pay with GRIT (Alpha)')}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -146,26 +148,31 @@ export default function StarkZapToolkit() {
                     {selectedTool === 'staking' && (
                         <div className="bg-[#0A0A0A] border border-white/5 rounded-[40px] p-10 shadow-2xl animate-in fade-in zoom-in duration-500">
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Bitcoin Staking</h3>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{t('starkzap.staking.title', 'Bitcoin Staking')}</h3>
                                 <Bitcoin size={32} className="text-[#F7931A]" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="p-8 rounded-[32px] bg-gradient-to-br from-[#F7931A]/10 to-transparent border border-[#F7931A]/20">
-                                    <div className="text-[10px] font-black text-[#F7931A] uppercase tracking-widest mb-2">Native Yield</div>
-                                    <div className="text-4xl font-black text-white mb-4">4.8% <span className="text-sm text-grinta-text-secondary">APY</span></div>
-                                    <button className="w-full py-3 rounded-2xl bg-[#F7931A] text-black font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Start Staking</button>
+                                    <div className="text-[10px] font-black text-[#F7931A] uppercase tracking-widest mb-2">{t('starkzap.staking.yield', 'Native Yield')}</div>
+                                    <div className="text-4xl font-black text-white mb-4">4.8% <span className="text-sm text-grinta-text-secondary">{t('starkzap.staking.apy', 'APY')}</span></div>
+                                    <button
+                                        onClick={() => window.open('https://starkzap.com/staking', '_blank')}
+                                        className="w-full py-3 rounded-2xl bg-[#F7931A] text-black font-black text-xs uppercase tracking-widest hover:scale-105 transition-all"
+                                    >
+                                        {t('starkzap.staking.start', 'Start Staking')}
+                                    </button>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="p-4 bg-white/5 rounded-2xl flex items-center justify-between">
-                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">Min. Deposit</span>
+                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">{t('starkzap.staking.min', 'Min. Deposit')}</span>
                                         <span className="text-xs font-black text-white">0.001 BTC</span>
                                     </div>
                                     <div className="p-4 bg-white/5 rounded-2xl flex items-center justify-between">
-                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">Unlock Period</span>
-                                        <span className="text-xs font-black text-white">None (Liquid)</span>
+                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">{t('starkzap.staking.unlock', 'Unlock Period')}</span>
+                                        <span className="text-xs font-black text-white">{t('starkzap.staking.liquid', 'None (Liquid)')}</span>
                                     </div>
                                     <div className="p-4 bg-white/5 rounded-2xl flex items-center justify-between">
-                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">Safety Score</span>
+                                        <span className="text-xs font-bold text-grinta-text-secondary uppercase">{t('starkzap.staking.safety', 'Safety Score')}</span>
                                         <span className="text-xs font-black text-orange-500">9.8/10</span>
                                     </div>
                                 </div>
@@ -177,7 +184,7 @@ export default function StarkZapToolkit() {
                         <div className="bg-[#0A0A0A] border border-white/5 rounded-[40px] p-10 shadow-2xl animate-in fade-in duration-500">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                                    <RefreshCw className="text-orange-500" /> Atomic Engine
+                                    <RefreshCw className="text-orange-500" /> {t('starkzap.zap.title', 'Atomic Engine')}
                                 </h3>
                                 <span className="text-[10px] font-bold text-orange-500/80 bg-orange-500/10 px-3 py-1 rounded-full uppercase">Starknet Sepolia</span>
                             </div>
@@ -195,10 +202,13 @@ export default function StarkZapToolkit() {
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <div className="text-right">
-                                                <div className="text-[9px] font-bold text-grinta-text-secondary uppercase mb-0.5">Router</div>
+                                                <div className="text-[9px] font-bold text-grinta-text-secondary uppercase mb-0.5">{t('starkzap.zap.router', 'Router')}</div>
                                                 <div className="text-[10px] font-bold text-white uppercase">{z.via}</div>
                                             </div>
-                                            <button className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-black hover:scale-110 transition-all">
+                                            <button
+                                                onClick={() => window.open('https://starkzap.com/zap', '_blank')}
+                                                className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-black hover:scale-110 transition-all"
+                                            >
                                                 <Zap size={16} fill="black" />
                                             </button>
                                         </div>
@@ -212,16 +222,16 @@ export default function StarkZapToolkit() {
                 {/* Right Sidebar - System Stats */}
                 <div className="lg:col-span-4 space-y-6">
                     <div className="bg-[#0A0A0A] border border-white/5 rounded-[40px] p-8 shadow-xl">
-                        <h4 className="text-[10px] font-black text-grinta-text-secondary uppercase tracking-[0.2em] mb-6">Security & Network</h4>
+                        <h4 className="text-[10px] font-black text-grinta-text-secondary uppercase tracking-[0.2em] mb-6">{t('starkzap.stats.title', 'Security & Network')}</h4>
                         <div className="space-y-6">
-                            <StatRow label="Starknet Latency" value="12ms" />
-                            <StatRow label="Node Provider" value="Blast / RPC" />
-                            <StatRow label="Paymaster Credits" value="1,240.50" color="text-orange-500" />
+                            <StatRow label={t('starkzap.stats.latency', 'Starknet Latency')} value="12ms" />
+                            <StatRow label={t('starkzap.stats.node', 'Node Provider')} value="Blast / RPC" />
+                            <StatRow label={t('starkzap.stats.paymaster', 'Paymaster Credits')} value="1,240.50" color="text-orange-500" />
                             <div className="h-px bg-white/5 w-full"></div>
                             <div className="flex items-center gap-3 p-4 bg-orange-500/5 rounded-2xl border border-orange-500/10">
                                 <Info size={16} className="text-orange-500" />
                                 <p className="text-[10px] text-grinta-text-secondary font-medium leading-relaxed">
-                                    StarkZap SDK v2.4.0 detected. All modules operating within normal parameters.
+                                    {t('starkzap.stats.sdk_detected', 'StarkZap SDK v2.4.0 detected. All modules operating within normal parameters.')}
                                 </p>
                             </div>
                         </div>
@@ -229,13 +239,13 @@ export default function StarkZapToolkit() {
 
                     <div className="bg-gradient-to-br from-orange-500/20 to-transparent border border-orange-500/20 rounded-[40px] p-8 group">
                         <Activity size={24} className="text-orange-500 mb-4 animate-pulse" />
-                        <h4 className="text-sm font-black text-white uppercase tracking-widest mb-2">Live Activity</h4>
-                        <p className="text-[10px] text-grinta-text-secondary leading-relaxed mb-6">Monitoring cross-chain zaps on Starknet Mainnet and Sepolia.</p>
+                        <h4 className="text-sm font-black text-white uppercase tracking-widest mb-2">{t('starkzap.activity.title', 'Live Activity')}</h4>
+                        <p className="text-[10px] text-grinta-text-secondary leading-relaxed mb-6">{t('starkzap.activity.desc', 'Monitoring cross-chain zaps on Starknet Mainnet and Sepolia.')}</p>
                         <div className="space-y-2">
                             {[1, 2].map(i => (
                                 <div key={i} className="flex items-center gap-2 text-[8px] font-bold text-grinta-text-secondary uppercase font-mono">
                                     <div className="w-1 h-1 rounded-full bg-orange-500"></div>
-                                    <span>ZAP_0x2b...f9 detected via AVNU</span>
+                                    <span>ZAP_0x2b...f9 {t('starkzap.activity.detected_via', 'detected via')} AVNU</span>
                                 </div>
                             ))}
                         </div>

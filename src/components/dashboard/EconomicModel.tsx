@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts';
-import { Settings2, Zap, BrainCircuit, ActivitySquare, Loader2 } from 'lucide-react';
+import { Settings2, Zap, BrainCircuit, Activity, Loader2 } from 'lucide-react';
 
 export default function EconomicModel() {
     const [layer, setLayer] = useState<'math' | 'ds' | 'quantum'>('math');
@@ -143,7 +143,7 @@ export default function EconomicModel() {
                             className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-sm font-bold ${layer === 'math' ? 'border-[#00FF41] bg-[#00FF41]/10 text-[#00FF41]' : 'border-[#222222] text-gray-400 hover:border-gray-500'
                                 }`}
                         >
-                            <ActivitySquare size={16} /> 1. Deterministic (PID)
+                            <Activity size={16} /> 1. Deterministic (PID)
                         </button>
                         <button
                             onClick={() => setLayer('ds')}

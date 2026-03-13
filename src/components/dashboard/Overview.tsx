@@ -48,7 +48,7 @@ export default function Overview() {
 
     // Memoized Logic for Solvency Chart
     const currentDebt = useMemo(() => vaults.reduce((acc, v) => acc + (v.debt || 0), 0), [vaults]);
-    const btcPrice = market.btcPrice || 70266;
+    const btcPrice = market.btcPrice || 0;
     const liqRatio = (market.liquidationRatio || 150) / 100;
     const debtCapacity = useMemo(() => (market.tvl * btcPrice) / liqRatio, [market.tvl, btcPrice, liqRatio]);
 
@@ -78,9 +78,9 @@ export default function Overview() {
 
     // Neural Feed Messages
     const [neuralLog, setNeuralLog] = useState([
-        { id: 1, text: "AGENT-0x42: Arbitrage opportunity detected in Starknet pool", type: 'info' },
-        { id: 2, text: "SYSTEM: Rebalancing safe #8821 for 180% CR", type: 'success' },
-        { id: 3, text: "MARKET: Flash Mint liquidity injection: 50,000 GRIT", type: 'zap' },
+        { id: Date.now() - 3000, text: "AGENT-0x42: Arbitrage opportunity detected in Starknet pool", type: 'info' },
+        { id: Date.now() - 2000, text: "SYSTEM: Rebalancing safe #8821 for 180% CR", type: 'success' },
+        { id: Date.now() - 1000, text: "MARKET: Flash Mint liquidity injection: 50,000 GRIT", type: 'zap' },
     ]);
 
     React.useEffect(() => {
@@ -365,7 +365,7 @@ export default function Overview() {
                                             key={`cell-${index}`}
                                             fill={entry.y > 250 ? '#00FF41' : entry.y > 180 ? '#F7931A' : '#EF4444'}
                                             fillOpacity={0.6}
-                                            className="animate-pulse"
+                                            className="transition-opacity duration-500"
                                             style={{ filter: `blur(${entry.z < 30 ? '1px' : '0px'})` }}
                                         />
                                     ))}

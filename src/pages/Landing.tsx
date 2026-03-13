@@ -600,6 +600,17 @@ export default function Landing() {
                 font-size: 7vw;
             }
         }
+
+        /* Restore default cursor on touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .landing-body,
+            .landing-body * {
+                cursor: auto !important;
+            }
+            #cursor {
+                display: none !important;
+            }
+        }
       `}</style>
 
       <div className="noise"></div>

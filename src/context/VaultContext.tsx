@@ -53,6 +53,7 @@ interface VaultContextType {
     borrowGrit: (id: string, amount: number) => void;
     repayGrit: (id: string, amount: number) => void;
     startNewFlow: () => void;
+    claimAllYield: () => void;
     market: MarketState;
 }
 
@@ -100,11 +101,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         }
     }, [loading, tvl, collateralPrice, redemptionPrice]);
 
-    // Simulation interval removed to migrate to real on-chain data.
-    // Infrastructure ready to receive real-time updates from Starknet hooks.
-    useEffect(() => {
-        // Protocol stats are now fetched via useProtocolStats hook
-    }, []);
+    // Simulation interval removed — protocol stats fetched via useProtocolStats hook.
 
     const addVault = (vault: Vault) => {
         setVaults(prev => [...prev, vault]);
@@ -116,7 +113,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
     const depositToVault = (id: string, amount: number) => {
         if (balanceL2 < amount) {
-            alert("No tienes suficiente BTC disponible en L2.");
+            console.warn('Insufficient L2 BTC balance for deposit.');
             return;
         }
 
