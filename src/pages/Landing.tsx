@@ -766,7 +766,7 @@ export default function Landing() {
               <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Contracts in tesnet</h3>
               <div className="flex flex-col gap-4">
                 {[
-                  { name: 'Grit Token', address: '0x2f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
+                  { name: 'Grit Token', address: '0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2' },
                   { name: 'SafeManager', address: '0x044728823ae43429eb96c14646077a461101a5db09ce6329a16684dcf199e552' },
                   { name: 'SafeEngine', address: '0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2' },
                   { name: 'CollateralJoin', address: '0x042a4228c74a2d8933549fb06208b1055ea628d63fa43081d76e41a9d43a8c22' },
