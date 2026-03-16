@@ -767,18 +767,18 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 {[
                   { name: 'Grit Token', address: '0x2f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
-                  { name: 'SafeManager', address: '0x5be8041f47bd935d8ce98e3b5b2ded6540acc6d4e24c64f3822927c5339eac6' },
-                  { name: 'SafeEngine', address: '0x2f4f6c374c20ddf3ea5e59cc70f2ad4c2bfb5786ca6c146266f89f7da575421' },
-                  { name: 'CollateralJoin', address: '0x362bd21cf4fd2ada59945e27c0fe10802dde0061e6aeeae0dd81b80669b4687' },
-                  { name: 'wBTC', address: '0x00452bd5c0512a61df7c7be8cfea5e4f893cb40e126bdc40aee6054db955129e' },
-                  { name: 'PID Controller', address: '0x694c76e4817aea5ae3858e99048ceb844679ed479d075ab9e0cd083fc9aee6a' },
-                  { name: 'Grinta Hook', address: '0x0064dc1c0264cc91d871b0cc5cda181730ff79978db5934abc4f2830993b10b5' },
-                  { name: 'OracleRelayer', address: '0x06ed1049ac5d4bccd34eb476a28a62816747c4bb8a90d71f713d21938d5f633d' },
+                  { name: 'SafeManager', address: '0x044728823ae43429eb96c14646077a461101a5db09ce6329a16684dcf199e552' },
+                  { name: 'SafeEngine', address: '0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2' },
+                  { name: 'CollateralJoin', address: '0x042a4228c74a2d8933549fb06208b1055ea628d63fa43081d76e41a9d43a8c22' },
+                  { name: 'wBTC', address: '0x055adbd6123ce69b2498fc99aec5006d00ac8b57070c99133f2c67c262e69223' },
+                  { name: 'PID Controller', address: '0x06928a6c33a6284d5f4c68278960ba888045856dc0ff30548972a866a838427d' },
+                  { name: 'Grinta Hook', address: '0x062347cbbb4e4da5c5eea0df072c471ffa530da08b9c04080875d2087f39f38d' },
+                  { name: 'OracleRelayer', address: '0x04acb771661162edeb881001a38282faff841e9118230b08f6df8e3a0920516f' },
                   { name: 'USDC', address: '0x0728f54606297716e46af72251733521e2c2a374abbc3dce4bcee8df4744dd30' }
                 ].map((contract, i) => (
                   <div key={i} className="flex justify-between items-center bg-[#0a1a10] p-4 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300">
                     <span className="text-white font-medium" style={{ fontFamily: 'Space Grotesk' }}>{contract.name}</span>
-                    <a href={`https://starkscan.co/contract/${contract.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#00FF41] hover:text-white transition-colors truncate w-32 md:w-48 text-right font-mono">
+                    <a href={`https://sepolia.starkscan.co/contract/${contract.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#00FF41] hover:text-white transition-colors truncate w-32 md:w-48 text-right font-mono">
                       {contract.address.slice(0, 6)}...{contract.address.slice(-4)} ↗
                     </a>
                   </div>
