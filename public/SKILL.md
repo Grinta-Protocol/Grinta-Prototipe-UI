@@ -1,419 +1,341 @@
 ---
-skill: grinta-cdp
-version: 0.1.0
-description: Manage Grinta CDP positions — open SAFEs, borrow GRIT stablecoin, monitor health
-author: Grinta Protocol
-tags: [starknet, cdp, stablecoin, defi, pid-controller]
-tools: [grinta-mcp-server]
+name: grinta-cdp-agent
+description: >
+  Onboard an AI agent onto Starknet Sepolia and interact with the Grinta CDP protocol
+  via MCP tools. Use when: (1) creating a new agent account on Starknet (keypair generation,
+  funding, deployment, WBTC minting), (2) managing Grinta CDPs — open/close safes, deposit/withdraw
+  WBTC collateral, borrow/repay GRIT stablecoin, (3) checking position health, system status,
+  or wallet balances, (4) swapping tokens via Ekubo DEX, (5) updating BTC/USD oracle price.
+  Supports Claude Code (.mcp.json), OpenCode (opencode.json), and OpenClaw (mcporter).
+metadata:
+  openclaw:
+    mcp:
+      server: "@grinta-mcp/server"
+      env:
+        - STARKNET_ACCOUNT_ADDRESS
+        - STARKNET_PRIVATE_KEY
+        - STARKNET_RPC_URL
+    requires:
+      bins: ["node", "npm", "npx"]
+      packages: ["starknet@^8.9.0", "tsx@^4.19.0"]
 ---
 
-# Grinta CDP — Agent Skill
+# Grinta CDP Agent
 
-> **Quick Start: Need a wallet?**
-> Before interacting with Grinta, agents must have a Starknet wallet. Use the skills below:
+## Phase 1: Onboard Agent
 
-| Skill | Purpose | Location |
-|-------|---------|----------|
-| **[starkzap-sdk](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starkzap-sdk/SKILL.md)** | Create wallet, onboarding (Signer/Privy/Cartridge) | starknet-agentic repo |
-| **[starknet-wallet](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-wallet/SKILL.md)** | Transfers, balance, session keys, gasless tx | starknet-agentic repo |
-| **[starknet-defi](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-defi/SKILL.md)** | Token swaps, staking, lending | starknet-agentic repo |
-| **[starknet-identity](https://github.com/keep-starknet-strange/starknet-agentic/blob/main/skills/starknet-identity/SKILL.md)** | ERC-8004 on-chain identity & reputation | starknet-agentic repo |
+Create a new Starknet agent account with WBTC collateral. This phase requires no project clone — create and run the script below directly.
 
-## What is Grinta?
+### Prerequisites
 
-Grinta is a PID-controller CDP (Collateralized Debt Position) stablecoin on Starknet. Users deposit WBTC collateral into SAFEs and borrow GRIT, a USD-pegged stablecoin whose peg is maintained by a PI controller — not by governance or fixed interest rates.
+- Node.js 18+ (available in Claude Code, OpenCode, and OpenClaw runtimes)
+- `starknet` v8+ (`npm i starknet@^8.9.0`) — v6 API is incompatible
+- `tsx` for running TypeScript (`npm i -D tsx`)
+- A Starknet Sepolia RPC URL (e.g. `https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_7/<key>`)
 
-Key differentiators:
-- **Floating peg**: GRIT's target price (redemption price) drifts over time based on market conditions
-- **No keepers**: Price and rate updates happen automatically via an Ekubo DEX hook on every swap
-- **Agent-native**: Built-in delegation system lets AI agents manage SAFEs on behalf of owners
-- **PI controller**: A proportional-integral controller adjusts the redemption rate to push the market price toward the redemption price
+> **Runtime note**: All three environments (Claude Code, OpenCode, OpenClaw) have access to
+> Node.js and npm. The onboarding script can be created and executed directly in any of them.
+> OpenClaw agents should create the working directory (e.g. `~/grinta-agent/`) and run
+> `npm init -y && npm i starknet@^8.9.0 tsx@^4.19.0` before proceeding.
 
-## Core Concepts
+### Step 1: Generate Keypair
 
-### SAFE
-A vault that holds WBTC collateral and tracks GRIT debt. Each SAFE has a unique numeric ID (u64). The owner can authorize agents to operate on their SAFE.
+Create `onboard-agent.ts` and run with `npx tsx onboard-agent.ts generate`.
+Set env: `STARKNET_RPC_URL`.
 
-### GRIT
-The stablecoin token (ERC-20, 18 decimals). Minted when borrowing, burned when repaying. Target price starts at $1.00 and drifts based on the PI controller.
+This generates the keypair and precalculated address, then saves to `agent-credentials.json`.
 
-### Redemption Price
-The protocol's internal target price for GRIT, denominated in USD. Stored in RAY precision (27 decimals). Starts at 1e27 ($1.00) and compounds continuously based on the redemption rate. Updated lazily — the stored value may be stale, but `get_redemption_price()` computes the current value.
+### Step 2: Fund via Faucet (MANUAL — requires user action)
 
-### Redemption Rate
-A per-second multiplier applied to the redemption price. Stored in RAY precision. When rate > 1e27 (RAY), the target price increases (incentivizes holding GRIT). When rate < 1e27, the target price decreases (incentivizes selling GRIT). Set by the PID controller.
+> **IMPORTANT**: This step cannot be automated by the agent. You must ask the user to do it.
 
-### Health Ratio & Liquidation
-Each SAFE must maintain collateral value >= debt value * liquidation_ratio. The `Health` struct provides:
-- `collateral_value`: USD value of collateral (WAD)
-- `debt`: Outstanding GRIT debt (WAD)
-- `ltv`: Loan-to-value ratio (WAD, where 0.5e18 = 50%)
-- `liquidation_price`: BTC price at which the SAFE becomes liquidatable (WAD)
+Tell the user to go to https://starknet-faucet.vercel.app/ and paste the agent address from step 1.
+This sends STRK tokens for gas. **Wait for the user to confirm funding before proceeding to step 3.**
+If the faucet fails or is rate-limited, alternatives:
+- Alchemy faucet: https://www.alchemy.com/faucets/starknet-sepolia
+- Wait 24h and retry
 
-### WAD and RAY Math
-- **WAD** = 1e18 (18 decimals) — used for token amounts, prices, ratios
-- **RAY** = 1e27 (27 decimals) — used for redemption price and rate (higher precision for compounding)
-- `wmul(a, b)` = a * b / WAD (multiply two WAD values)
-- `wdiv(a, b)` = a * WAD / b (divide two WAD values)
-- `rmul(a, b)` = a * b / RAY (multiply two RAY values)
+After funding, verify the balance on-chain before deploying:
+- Check https://sepolia.starkscan.co/contract/<agent-address> for STRK balance > 0
+- Or use the RPC to call `starknet_getBalance` on the agent address
 
-### WBTC Decimal Conversion
-WBTC has 8 decimals on-chain. The CollateralJoin contract converts between 8-decimal WBTC amounts and 18-decimal internal (WAD) amounts. When depositing via the SafeManager, pass the raw WBTC amount (8 decimals). The `open_and_borrow` function accepts `collateral_amount` in WBTC's native 8 decimals.
+### Step 3: Deploy & Mint
 
-### Agent Delegation
-SAFE owners can authorize agent addresses to perform operations (deposit, withdraw, borrow, repay, close) on their SAFEs. Only the owner can authorize/revoke agents. Agents cannot authorize other agents.
+Run `npx tsx onboard-agent.ts deploy` to deploy the account and mint 1 WBTC.
+
+### Onboarding Script
+
+```typescript
+import { Account, RpcProvider, Contract, hash, ec, stark } from "starknet";
+import { writeFileSync, readFileSync, existsSync } from "fs";
+
+const RPC_URL = process.env.STARKNET_RPC_URL!;
+if (!RPC_URL) {
+  console.error("Missing STARKNET_RPC_URL");
+  process.exit(1);
+}
+
+const OZ_ACCOUNT_CLASS_HASH = "0x5b4b537eaa2399e3aa99c4e2e0208ebd6c71bc1467938cd52c798c601e43564";
+
+const TOKENS = {
+  WBTC: "0x055adbd6123ce69b2498fc99aec5006d00ac8b57070c99133f2c67c262e69223",
+};
+
+const MINTABLE_ABI = [
+  {
+    type: "function",
+    name: "mint",
+    inputs: [
+      { name: "to", type: "core::starknet::contract_address::ContractAddress" },
+      { name: "amount", type: "core::integer::u256" },
+    ],
+    outputs: [],
+    state_mutability: "external",
+  },
+];
+
+const provider = new RpcProvider({ nodeUrl: RPC_URL });
+
+async function waitTx(txHash: string, label: string) {
+  const receipt = await provider.waitForTransaction(txHash);
+  console.log(`   Done: ${label}`);
+  return receipt;
+}
+
+async function generate() {
+  console.log("Step 1: Generate keypair");
+  const privateKey = stark.randomAddress();
+  const publicKey = ec.starkCurve.getStarkKey(privateKey);
+  const agentAddress = hash.calculateContractAddressFromHash(
+    0, OZ_ACCOUNT_CLASS_HASH, [publicKey], BigInt(0)
+  );
+  console.log(`   Address:     ${agentAddress}`);
+  console.log(`   Private Key: ${privateKey}`);
+
+  const result = { address: agentAddress, privateKey, publicKey, rpcUrl: RPC_URL };
+  writeFileSync("./agent-credentials.json", JSON.stringify(result, null, 2));
+  console.log("Saved to agent-credentials.json");
+  console.log("\nNext: fund this address with STRK via https://starknet-faucet.vercel.app/");
+  console.log("Then run: npx tsx onboard-agent.ts deploy");
+}
+
+async function deploy() {
+  if (!existsSync("./agent-credentials.json")) {
+    console.error("No agent-credentials.json found. Run 'npx tsx onboard-agent.ts generate' first.");
+    process.exit(1);
+  }
+  const creds = JSON.parse(readFileSync("./agent-credentials.json", "utf-8"));
+  const { address, privateKey, publicKey } = creds;
+
+  // Deploy OZ account
+  console.log("Step 3: Deploy account");
+  const agentAccount = new Account({ provider, address, signer: privateKey });
+  try {
+    const deployResult = await agentAccount.deployAccount({
+      classHash: OZ_ACCOUNT_CLASS_HASH,
+      constructorCalldata: [publicKey],
+      addressSalt: 0,
+    });
+    await waitTx(deployResult.transaction_hash, "Account deployed");
+  } catch (e: any) {
+    if (e.message?.includes("already deployed") || e.message?.includes("0x20")) {
+      console.log("   Account already deployed");
+    } else {
+      throw e;
+    }
+  }
+
+  // Mint WBTC
+  console.log("Step 4: Mint WBTC");
+  const wbtcAmount = BigInt(100_000_000); // 1 WBTC (8 decimals)
+  const wbtc = new Contract({ abi: MINTABLE_ABI, address: TOKENS.WBTC, providerOrAccount: agentAccount });
+  const { transaction_hash: mintTx } = await agentAccount.execute([
+    wbtc.populate("mint", [address, wbtcAmount]),
+  ]);
+  await waitTx(mintTx, "1 WBTC minted");
+
+  console.log("\nOnboarding complete! Configure MCP server with these credentials.");
+}
+
+const command = process.argv[2];
+if (command === "generate") {
+  generate().catch((e) => { console.error("Failed:", e.message || e); process.exit(1); });
+} else if (command === "deploy") {
+  deploy().catch((e) => { console.error("Failed:", e.message || e); process.exit(1); });
+} else {
+  console.log("Usage: npx tsx onboard-agent.ts <generate|deploy>");
+}
+```
+
+Output is saved to `agent-credentials.json`:
+```json
+{ "address": "0x...", "privateKey": "0x...", "rpcUrl": "https://..." }
+```
+
+## Phase 2: Configure MCP Server
+
+After onboarding, connect the `grinta-cdp` MCP server using the agent credentials.
+The MCP server is available as an npm package: `npm i @grinta-mcp/server`.
+
+### Claude Code (`.mcp.json`)
+
+```json
+{
+  "mcpServers": {
+    "grinta-cdp": {
+      "command": "npx",
+      "args": ["@grinta-mcp/server"],
+      "env": {
+        "STARKNET_ACCOUNT_ADDRESS": "<address from agent-credentials.json>",
+        "STARKNET_PRIVATE_KEY": "<privateKey from agent-credentials.json>",
+        "STARKNET_RPC_URL": "<rpcUrl from agent-credentials.json>"
+      }
+    }
+  }
+}
+```
+
+### OpenCode (`opencode.json`)
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "grinta-cdp": {
+      "type": "local",
+      "command": ["npx", "@grinta-mcp/server"],
+      "enabled": true,
+      "environment": {
+        "STARKNET_ACCOUNT_ADDRESS": "<address from agent-credentials.json>",
+        "STARKNET_PRIVATE_KEY": "<privateKey from agent-credentials.json>",
+        "STARKNET_RPC_URL": "<rpcUrl from agent-credentials.json>"
+      }
+    }
+  }
+}
+```
+
+### OpenClaw (`.mcporter.json`)
+
+OpenClaw agents use `mcporter` to bridge MCP servers into the OpenClaw runtime.
+The working directory is typically `~/grinta-agent/`.
+
+```bash
+# 1. Install dependencies in your working directory
+npm init -y && npm i starknet@^8.9.0 tsx@^4.19.0
+```
+
+```json
+{
+  "servers": {
+    "grinta-cdp": {
+      "command": "npx",
+      "args": ["@grinta-mcp/server"],
+      "env": {
+        "STARKNET_ACCOUNT_ADDRESS": "<address from agent-credentials.json>",
+        "STARKNET_PRIVATE_KEY": "<privateKey from agent-credentials.json>",
+        "STARKNET_RPC_URL": "<rpcUrl from agent-credentials.json>"
+      }
+    }
+  }
+}
+```
+
+Once configured, call tools via mcporter:
+```bash
+# Verify connection
+mcporter call grinta-cdp.grinta_get_balances --config .mcporter.json
+
+# Example operations
+mcporter call grinta-cdp.grinta_open_safe --config .mcporter.json
+mcporter call grinta-cdp.grinta_deposit safe_id=1 amount=0.5 --config .mcporter.json
+mcporter call grinta-cdp.grinta_borrow safe_id=1 amount=1000 --config .mcporter.json
+```
+
+**Credential storage**: Save `agent-credentials.json` to your agent's persistent memory
+(e.g. `~/.openclaw/workspace/agents/<AgentName>/memory/grinta-cdp.md`) so credentials
+survive across sessions. Never share the private key.
+
+After configuring, restart the MCP server in your tool to pick up credentials.
+
+## Phase 3: Grinta CDP Flow (MCP Tools)
+
+All protocol interactions use MCP tools — no scripts needed.
+
+### Typical CDP Lifecycle
+
+```
+1. grinta_get_balances          — verify WBTC is available
+2. grinta_open_safe             — create a new SAFE (vault)
+3. grinta_deposit               — deposit WBTC collateral into SAFE
+4. grinta_get_max_borrow        — check how much GRIT can be borrowed
+5. grinta_borrow                — borrow GRIT against collateral
+6. grinta_get_position_health   — monitor LTV and liquidation price
+7. grinta_swap                  — swap GRIT for USDC on Ekubo DEX
+8. grinta_repay                 — repay GRIT debt
+9. grinta_withdraw              — withdraw WBTC collateral
+10. grinta_close_safe           — close SAFE (requires zero debt)
+```
+
+### MCP Tools Reference
+
+| Tool | Action | Key Parameters |
+|------|--------|----------------|
+| `grinta_get_balances` | Wallet balances (ETH, WBTC, GRIT, USDC) | `address` (optional) |
+| `grinta_get_system_status` | BTC price, GRIT price, total debt, debt ceiling | — |
+| `grinta_get_position_health` | Collateral value, debt, LTV, liquidation price | `safe_id` |
+| `grinta_get_safe` | Raw SAFE data (collateral/debt in WAD) | `safe_id` |
+| `grinta_get_max_borrow` | Max additional GRIT borrowable | `safe_id` |
+| `grinta_open_safe` | Open a new empty SAFE | — |
+| `grinta_deposit` | Approve + deposit WBTC into SAFE | `safe_id`, `amount` |
+| `grinta_withdraw` | Withdraw WBTC from SAFE | `safe_id`, `amount` |
+| `grinta_borrow` | Borrow GRIT against collateral | `safe_id`, `amount` |
+| `grinta_repay` | Repay GRIT debt | `safe_id`, `amount` |
+| `grinta_close_safe` | Close SAFE (debt must be zero) | `safe_id` |
+| `grinta_swap` | Swap tokens via Ekubo DEX | `from`, `to`, `amount` |
+| `grinta_update_btc_price` | Push BTC/USD price to oracle | — |
+| `grinta_trigger_update` | Trigger system price/rate update | — |
+
+### Safety Rules
+
+- Check `grinta_get_position_health` before and after borrowing.
+- Keep LTV below 50% for safety margin (liquidation at 150% ratio = ~66.7% LTV).
+- Always repay all debt before calling `grinta_close_safe`.
+- Amounts use human-readable format: `"0.5"` for WBTC, `"1000"` for GRIT.
+
+### Token Decimals
+
+| Token | Decimals | Example |
+|-------|----------|---------|
+| WBTC | 8 | `"0.1"` = 10,000,000 |
+| GRIT | 18 | `"100"` = 100 * 10^18 |
+| ETH | 18 | `"0.01"` = 10^16 |
+
+## Network
+
+- **Chain**: Starknet Sepolia (testnet)
+- **Explorer**: https://sepolia.starkscan.co
 
 ## Contract Addresses
 
-> **Network**: Starknet Sepolia
-
-```
-SAFE_MANAGER:     0x044728823ae43429eb96c14646077a461101a5db09ce6329a16684dcf199e552
-SAFE_ENGINE:      0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2
-COLLATERAL_JOIN:  0x042a4228c74a2d8933549fb06208b1055ea628d63fa43081d76e41a9d43a8c22
-PID_CONTROLLER:   0x06928a6c33a6284d5f4c68278960ba888045856dc0ff30548972a866a838427d
-GRINTA_HOOK:      0x062347cbbb4e4da5c5eea0df072c471ffa530da08b9c04080875d2087f39f38d
-ORACLE_RELAYER:   0x04acb771661162edeb881001a38282faff841e9118230b08f6df8e3a0920516f
-WBTC (Mock):      0x055adbd6123ce69b2498fc99aec5006d00ac8b57070c99133f2c67c262e69223
-USDC (Mock):      0x0728f54606297716e46af72251733521e2c2a374abbc3dce4bcee8df4744dd30
-GRIT (= SAFEEngine): 0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2
-```
-
-### Ekubo Pool (GRIT/USDC)
-- Pool on Ekubo Sepolia with GrintaHook as extension
-- Fee: 0, Tick spacing: 1000
-- token0 = MockUSDC (smaller address), token1 = GRIT (larger address)
-- Liquidity seeded: ~10,000 GRIT + ~10,000 USDC
-
-## SafeManager Functions (User/Agent Entry Point)
-
-All write operations go through SafeManager. It handles authorization, calls SAFEEngine and CollateralJoin internally.
-
-### Write Functions
-
-```
-open_safe() -> u64
-```
-Opens a new empty SAFE. Returns the safe_id. Caller becomes the owner.
-
-```
-open_and_borrow(collateral_amount: u256, borrow_amount: u256) -> u64
-```
-Opens a SAFE, deposits WBTC collateral, and borrows GRIT in one transaction.
-- `collateral_amount`: WBTC in 8 decimals (e.g., 50000000 = 0.5 BTC)
-- `borrow_amount`: GRIT in WAD (e.g., 10000e18 = 10,000 GRIT)
-- Requires prior ERC20 approval of WBTC to CollateralJoin
-- Returns the new safe_id
-
-```
-deposit(safe_id: u64, amount: u256)
-```
-Deposits WBTC collateral into an existing SAFE.
-- `amount`: WBTC in 8 decimals
-- Requires ERC20 approval of WBTC to CollateralJoin
-
-```
-withdraw(safe_id: u64, amount: u256)
-```
-Withdraws WBTC collateral from a SAFE. Reverts if it would make the SAFE unhealthy.
-- `amount`: internal WAD amount (not 8 decimals)
-
-```
-borrow(safe_id: u64, amount: u256)
-```
-Borrows additional GRIT against existing collateral. Mints GRIT to the SAFE owner.
-- `amount`: GRIT in WAD
-
-```
-repay(safe_id: u64, amount: u256)
-```
-Repays GRIT debt. Burns GRIT from the SAFE owner. If amount > debt, only repays the debt.
-- `amount`: GRIT in WAD
-
-```
-close_safe(safe_id: u64)
-```
-Closes a SAFE. Requires zero debt. Returns any remaining collateral to caller.
-
-```
-authorize_agent(safe_id: u64, agent: ContractAddress)
-```
-Grants an agent address permission to operate on the SAFE. Only the owner can call this.
-
-```
-revoke_agent(safe_id: u64, agent: ContractAddress)
-```
-Revokes an agent's permission. Only the owner can call this.
-
-### Read Functions
-
-```
-get_position_health(safe_id: u64) -> Health
-```
-Returns the SAFE's health metrics: collateral_value, debt, ltv, liquidation_price (all WAD).
-
-```
-get_max_borrow(safe_id: u64) -> u256
-```
-Returns the maximum additional GRIT that can be borrowed without breaching the liquidation ratio.
-
-```
-get_safe_owner(safe_id: u64) -> ContractAddress
-```
-Returns the owner address of a SAFE.
-
-```
-is_authorized(safe_id: u64, agent: ContractAddress) -> bool
-```
-Checks if an agent is authorized to operate on a SAFE.
-
-## GrintaHook Functions (Price Oracle + PID Trigger)
-
-The GrintaHook is an Ekubo extension that acts as the oracle relayer. It computes GRIT/USDC price from swap deltas and triggers PID rate updates. These functions can be called directly on the GrintaHook contract.
-
-### Write Functions
-
-```
-update()
-```
-Manual price/rate update. Called automatically by SafeManager before every SAFE operation. Reads BTC/USDC from OracleRelayer (throttled to 60s) and tries PID rate update (throttled to 3600s).
-
-```
-set_market_price(price: u256)
-```
-Public setter — anyone can push a GRIT/USD market price in WAD (18 decimals). Enables keepers, agents, or frontends to feed price without needing to swap. Example: `1000000000000000000` = $1.00.
-
-### Read Functions
-
-```
-get_market_price() -> u256            // GRIT/USD price in WAD (from last swap or set_market_price)
-get_collateral_price() -> u256        // BTC/USD price in WAD (from OracleRelayer)
-get_last_update_time() -> u64         // Timestamp of last collateral price update
-```
-
-## SAFEEngine View Functions (Direct Reads)
-
-These can be called directly on the SAFEEngine contract for system-level data.
-
-```
-get_safe(safe_id: u64) -> Safe { collateral: u256, debt: u256 }
-get_safe_count() -> u64
-get_safe_owner(safe_id: u64) -> ContractAddress
-get_safe_health(safe_id: u64) -> Health
-get_system_health() -> Health
-get_collateral_price() -> u256          // BTC/USD in WAD
-get_redemption_price() -> u256          // Target GRIT price in RAY (computes current)
-get_redemption_rate() -> u256           // Per-second rate in RAY
-get_total_debt() -> u256                // Total GRIT supply in WAD
-get_total_collateral() -> u256          // Total BTC collateral in WAD
-get_debt_ceiling() -> u256              // Max total debt in WAD
-get_liquidation_ratio() -> u256         // e.g. 1.5e18 = 150%
-get_grit_balance(account: ContractAddress) -> u256  // GRIT balance in WAD
-```
-
-## Workflows
-
-### 1. Open a Position
-
-```
-Step 1: Approve WBTC spending
-  → WBTC.approve(COLLATERAL_JOIN, collateral_amount)
-
-Step 2: Open SAFE and borrow
-  → SafeManager.open_and_borrow(collateral_amount, borrow_amount)
-  → Returns safe_id
-
-Step 3: Verify health
-  → SafeManager.get_position_health(safe_id)
-  → Ensure ltv is well below liquidation threshold
-```
-
-**Example**: Deposit 0.5 BTC, borrow 10,000 GRIT
-- collateral_amount = 50_000_000 (0.5 BTC in 8 decimals)
-- borrow_amount = 10_000_000_000_000_000_000_000 (10,000 in WAD)
-- At BTC=$60,000: collateral_value = $30,000, ltv = 33%, healthy at 150% ratio
-
-### 2. Monitor and Manage Health
-
-```
-Step 1: Check current health
-  → SafeManager.get_position_health(safe_id)
-
-Step 2: If ltv is rising toward danger zone (approaching 1/liquidation_ratio):
-  Option A — Deposit more collateral:
-    → WBTC.approve(COLLATERAL_JOIN, amount)
-    → SafeManager.deposit(safe_id, amount)
-  Option B — Repay some debt:
-    → SafeManager.repay(safe_id, amount)
-
-Step 3: If ltv is very low (overcollateralized), optionally:
-  → SafeManager.borrow(safe_id, additional_amount)  // borrow more
-  → SafeManager.withdraw(safe_id, amount)            // withdraw excess collateral
-```
-
-### 3. Close a Position
-
-```
-Step 1: Repay all debt
-  → SafeManager.repay(safe_id, type(u256).max)  // repays up to full debt
-
-Step 2: Close SAFE (returns collateral)
-  → SafeManager.close_safe(safe_id)
-```
-
-### 4. Delegate to an Agent
-
-```
-Step 1: Owner authorizes agent
-  → SafeManager.authorize_agent(safe_id, agent_address)
-
-Step 2: Agent can now call deposit/withdraw/borrow/repay/close on the SAFE
-
-Step 3: Owner revokes when done
-  → SafeManager.revoke_agent(safe_id, agent_address)
-```
-
-## Agent Strategies
-
-### Health Management Agent
-
-Monitor SAFEs and automatically rebalance to maintain a target LTV:
-
-```
-target_ltv = 0.40  (40%)
-danger_ltv = 0.60  (60%)
-critical_ltv = 0.62 (62%, approaching 66.7% liquidation at 150% ratio)
-
-Loop:
-  health = get_position_health(safe_id)
-  current_ltv = health.ltv / 1e18
-
-  if current_ltv > critical_ltv:
-    // Emergency: repay debt immediately
-    repay_amount = calculate_repay_to_target(health, target_ltv)
-    repay(safe_id, repay_amount)
-
-  elif current_ltv > danger_ltv:
-    // Warning: deposit more collateral or partially repay
-    deposit_amount = calculate_deposit_to_target(health, target_ltv)
-    deposit(safe_id, deposit_amount)
-
-  elif current_ltv < 0.25:
-    // Very overcollateralized: opportunity to borrow more
-    max_additional = get_max_borrow(safe_id)
-    borrow(safe_id, max_additional * 0.5)  // borrow conservatively
-```
-
-### Peg Arbitrage Agent
-
-Profit from deviations between market price and redemption price:
-
-```
-market_price = GrintaHook.get_market_price()
-redemption_price = SAFEEngine.get_redemption_price() / 1e9  // RAY to WAD
-
-if market_price > redemption_price * 1.02:
-  // GRIT is trading above target: mint and sell
-  // Borrow GRIT → sell on Ekubo for USDC → profit
-  borrow(safe_id, amount)
-  // swap GRIT → USDC on Ekubo
-
-elif market_price < redemption_price * 0.98:
-  // GRIT is trading below target: buy and repay
-  // Buy cheap GRIT on Ekubo → repay debt → profit from rate adjustment
-  // swap USDC → GRIT on Ekubo
-  repay(safe_id, amount)
-```
-
-### Leverage Loop Agent
-
-Create leveraged BTC exposure:
-
-```
-// Start: deposit 1 BTC, borrow GRIT, swap for more BTC, repeat
-for i in 0..max_loops:
-  max_borrow = get_max_borrow(safe_id)
-  safe_borrow = max_borrow * 0.7  // stay well within limits
-  if safe_borrow < min_threshold:
-    break
-  borrow(safe_id, safe_borrow)
-  // swap GRIT → WBTC on Ekubo
-  deposit(safe_id, received_wbtc)
-
-// Result: 2-3x leveraged BTC exposure
-// Risk: liquidation if BTC drops significantly
-```
-
-## Error Messages
-
-| Error | Contract | Cause | Fix |
-|-------|----------|-------|-----|
-| `MGR: not authorized` | SafeManager | Caller is not the SAFE owner or authorized agent | Use the owner account or get authorized via `authorize_agent` |
-| `MGR: only owner can delegate` | SafeManager | Non-owner tried to authorize/revoke an agent | Only the SAFE owner can manage agent permissions |
-| `MGR: only owner can revoke` | SafeManager | Non-owner tried to revoke an agent | Only the SAFE owner can revoke |
-| `MGR: safe has debt` | SafeManager | Tried to close a SAFE with outstanding debt | Repay all debt first with `repay(safe_id, u256_max)` |
-| `SAFE: not manager` | SAFEEngine | Direct call to a manager-only function | Call through SafeManager, not SAFEEngine directly |
-| `SAFE: not admin` | SAFEEngine | Caller is not the admin | Admin-only function |
-| `SAFE: not hook` | SAFEEngine | Caller is not the GrintaHook | Only GrintaHook can update prices/rates |
-| `SAFE: insufficient collateral` | SAFEEngine | Withdrawing more collateral than available | Check `get_safe().collateral` first |
-| `SAFE: would be undercollateral` | SAFEEngine | Withdrawal would breach liquidation ratio | Withdraw less or repay debt first |
-| `SAFE: undercollateralized` | SAFEEngine | Borrow would breach liquidation ratio | Borrow less or deposit more collateral first |
-| `SAFE: debt ceiling exceeded` | SAFEEngine | System-wide debt limit reached | Wait for capacity or repay existing debt |
-| `SAFE: insufficient grit` | SAFEEngine | Trying to burn more GRIT than the account holds | Ensure sufficient GRIT balance before repaying |
-| `GRIT: insufficient balance` | SAFEEngine | ERC20 transfer with insufficient balance | Check balance with `get_grit_balance()` |
-| `GRIT: insufficient allowance` | SAFEEngine | ERC20 transferFrom without approval | Call `approve()` first |
-| `JOIN: not manager` | CollateralJoin | Direct call to a manager-only function | Call through SafeManager |
-| `JOIN: zero amount` | CollateralJoin | Deposit/withdraw of zero or dust amount | Use a meaningful amount |
-| `JOIN: transfer failed` | CollateralJoin | WBTC transfer failed | Check WBTC balance and approval to CollateralJoin |
-| `JOIN: insufficient assets` | CollateralJoin | Contract doesn't hold enough WBTC | Indicates a system error |
-
-## Important Notes
-
-### Decimal Handling
-- **WBTC amounts for deposit**: Always in 8 decimals (native WBTC). Example: 0.5 BTC = 50_000_000
-- **GRIT amounts (borrow/repay)**: Always in WAD (18 decimals). Example: 100 GRIT = 100_000_000_000_000_000_000
-- **Internal collateral**: Stored in WAD (18 decimals) after conversion by CollateralJoin
-- **Redemption price**: RAY (27 decimals). To convert to USD: divide by 1e27
-- **Redemption rate**: RAY (27 decimals). A rate of 1e27 means no change. Rate > 1e27 means target price increasing
-- **LTV and ratios**: WAD (18 decimals). An LTV of 0.5e18 means 50%
-
-### Lazy Redemption Price Updates
-The redemption price stored on-chain may be stale. The `get_redemption_price()` view function computes the current value by applying `rate^elapsed_time` to the stored price. The price is updated on-chain only during `borrow()`, `repay()`, and `update_redemption_rate()` calls. For accurate calculations, always use `get_redemption_price()` rather than reading storage directly.
-
-### Transaction Ordering for Deposits
-When depositing WBTC, you must approve the CollateralJoin contract (not SafeManager) to spend your WBTC. The flow is:
-1. `WBTC.approve(COLLATERAL_JOIN_ADDRESS, amount)`
-2. `SafeManager.deposit(safe_id, amount)` or `SafeManager.open_and_borrow(amount, borrow_amount)`
-
-These can be batched in a single multicall transaction on Starknet.
-
-### Price Feed Agent
-
-Push BTC/USD price from off-chain APIs to the OracleRelayer, and set GRIT market price:
-
-```
-Loop:
-  // 1. Fetch BTC/USD from CoinGecko or other API
-  btc_price_usd = fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
-
-  // 2. Convert to WAD and push to OracleRelayer
-  price_wad = btc_price_usd * 1e18
-  OracleRelayer.update_price(WBTC_ADDRESS, USDC_ADDRESS, price_wad)
-
-  // 3. Optionally set GRIT market price if no recent swaps
-  GrintaHook.set_market_price(observed_grit_price_wad)
-
-  // 4. Trigger update to push prices through the system
-  GrintaHook.update()
-
-  sleep(300)  // every 5 minutes
-```
-
-### PoC Caveats
-This is a proof-of-concept. The following features are not yet implemented:
-- **Liquidation mechanism**: No liquidator role or auction system yet
-- **Stability fee**: No interest accrual on debt positions
-- **Multi-collateral**: Only WBTC is supported
-- **Governance**: Admin is a single address, not a multisig or DAO
-- **Formal verification**: Contracts have not been audited
-- **Mainnet deployment**: Only targeting Sepolia testnet initially
+| Contract | Address |
+|----------|---------|
+| SAFE Manager | `0x044728823ae43429eb96c14646077a461101a5db09ce6329a16684dcf199e552` |
+| SAFE Engine | `0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2` |
+| Collateral Join | `0x042a4228c74a2d8933549fb06208b1055ea628d63fa43081d76e41a9d43a8c22` |
+| Grinta Hook | `0x062347cbbb4e4da5c5eea0df072c471ffa530da08b9c04080875d2087f39f38d` |
+| WBTC | `0x055adbd6123ce69b2498fc99aec5006d00ac8b57070c99133f2c67c262e69223` |
+| GRIT | `0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2` |
+| USDC | `0x0728f54606297716e46af72251733521e2c2a374abbc3dce4bcee8df4744dd30` |
+| ETH | `0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7` |
+
+## Troubleshooting
+
+- **Account deployment fails**: Ensure the agent address has sufficient STRK balance for gas. Check on explorer before deploying.
+- **"Resources bounds exceed balance (0)"**: The wallet has no STRK. The faucet funding either failed or hasn't confirmed yet. Ask the user to verify and re-fund.
+- **Starknet v8 Account constructor**: In v8, `Account` takes an options object: `new Account({ provider, address, signer: privateKey })`. Do NOT use positional arguments like v6 (`new Account(provider, address, privateKey)`) — this will fail silently or throw.
+- **MCP not responding**: Restart MCP server; verify credentials in config file. For OpenClaw, check `.mcporter.json` is in the working directory.
+- **"Exceeds max borrow"**: Reduce borrow amount or deposit more collateral.
+- **"SAFE not authorized"**: Agent is not the owner of that SAFE ID.
+- **Nonce errors**: Retry the transaction — nonce may have been consumed by a prior tx.
+- **Script corruption**: If the onboarding script gets corrupted during creation, delete it and rewrite from scratch using the template in this skill.
