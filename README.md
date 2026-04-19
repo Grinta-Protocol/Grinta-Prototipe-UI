@@ -7,8 +7,6 @@
   [![Cairo](https://img.shields.io/badge/Cairo-v2.6.0-orange?style=for-the-badge&logo=cairo)](https://book.cairo-lang.org/)
   [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
   [![Built with React](https://img.shields.io/badge/Built%20with-React%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
-
-  [**Live Demo**] (https://grinta-prototype-ui.vercel.app/)
   
 </div>
 ---
