@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import LogoReflecterLabs from '../public/LogoReflecterLabs.png';
-import { useCampaign } from '../hooks/useCampaign';
+import MagicBento from '../components/MagicBento';
+import CardSwap, { Card } from '../components/CardSwap';
+import BorderGlow from '../components/BorderGlow';
+
 
 const SEO = () => {
   useEffect(() => {
@@ -85,7 +88,6 @@ const CopyButton = ({ text, label }: { text: string; label: string }) => {
 };
 
 export default function Landing() {
-  const campaign = useCampaign();
   const cursorRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -620,10 +622,10 @@ export default function Landing() {
         <Link to="/" className="nav-logo magnetic">GRINTA</Link>
         <ul className="nav-menu">
           <li><HackerText text="PROTOCOL" href="#protocol" /></li>
+          <li><HackerText text="GOVERNANCE" href="#governance" /></li>
           <li><HackerText text="ECOSYSTEM" href="#ecosystem" /></li>
-          <li><HackerText text="ABOUT" href="#about" /></li>
         </ul>
-        <Link to="/app" className="cta-btn magnetic"><span>APP Tesnet</span></Link>
+        <Link to="/app" className="cta-btn magnetic"><span>App Tesnet</span></Link>
       </nav>
 
       <div id="scroll-content" ref={scrollContentRef}>
@@ -644,48 +646,103 @@ export default function Landing() {
 
           <div className="tape-wrapper">
             <div className="tape-text">
-              GRINTA PROTOCOL ✦ WBTC x BTCFi ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ WBTC x BTCFi ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ WBTC x BTCFi ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ WBTC x BTCFi ✦ PID CONTROLLER ✦
+              GRINTA PROTOCOL ✦ BAGENT-AS-GOVERNOR ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ BAGENT-AS-GOVERNOR ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ BAGENT-AS-GOVERNOR ✦ PID CONTROLLER ✦ GRINTA PROTOCOL ✦ BAGENT-AS-GOVERNOR ✦ PID CONTROLLER ✦
             </div>
           </div>
         </section>
 
         <section id="protocol" className="section-dark" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10vw 5vw' }}>
-          <div className="text-center mb-16 max-w-4xl">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column: Title and Description */}
+            <div className="text-left">
+              <h2 className="text-4xl md:text-6xl font-bold mb-8" style={{ fontFamily: 'Syncopate' }}>
+                Protocol
+              </h2>
+              <p className="text-xl text-gray-400 leading-relaxed font-light max-w-xl mb-8">
+                Grinta is an autonomous credit protocol. It enables the creation of GRIT, a stable asset backed by decentralized collateral and governed by a real-time control system.
+              </p>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <div className="text-[#00FF41] font-bold mb-1 tracking-tighter">STABLE ASSET</div>
+                  <div className="text-2xl font-bold text-white">GRIT</div>
+                </div>
+                <div>
+                  <div className="text-[#00FF41] font-bold mb-1 tracking-tighter">COLLATERAL</div>
+                  <div className="text-2xl font-bold text-white">BTC + LSTs</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Card Swap Component */}
+            <div className="relative flex justify-center lg:justify-end h-[600px] w-full">
+              <CardSwap
+                cardDistance={60}
+                verticalDistance={70}
+                delay={5000}
+                pauseOnHover={false}
+              >
+                <Card className="flex flex-col p-8 border-[#00FF41]/20 bg-[#0a1a10]">
+                  <div className="text-xs font-bold text-[#00FF41] tracking-widest uppercase mb-4">Core Mechanism</div>
+                  <h3 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: 'Space Grotesk' }}>PID Controller</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    Pure mathematics replaces manual governance. Real-time rate adjustments keep GRIT stable without human intervention.
+                  </p>
+                </Card>
+                <Card className="flex flex-col p-8 border-white/10 bg-[#050505]">
+                  <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Asset Quality</div>
+                  <h3 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: 'Space Grotesk' }}>BTC Collateral</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    Backed by the world's Hardest Asset. Grinta accepts WBTC and BTC Synthetics to ensure deep liquidity and security.
+                  </p>
+                </Card>
+                <Card className="flex flex-col p-8 border-[#00FF41]/20 bg-[#0a1a10]">
+                  <div className="text-xs font-bold text-[#00FF41] tracking-widest uppercase mb-4">Architecture</div>
+                  <h3 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: 'Space Grotesk' }}>Agent-Native</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    Designed for the future where agents are the primary users. Fully composable, automated, and autonomous.
+                  </p>
+                </Card>
+              </CardSwap>
+            </div>
+          </div>
+        </section>
+
+        {/* --- GOVERNANCE --- */}
+        <section id="governance" className="section-dark" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10vw 5vw', backgroundColor: '#050505', borderTop: '1px solid #111' }}>
+          <div className="text-center max-w-4xl mb-12">
             <h2 className="text-4xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Syncopate' }}>
-              The Agent-Native<br />
-              <span style={{ color: '#00FF41' }}>Stablecoin</span>
+              Governance
             </h2>
-            <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
-              GRIT is a PID-controlled stablecoin on Starknet. No keepers, no governance votes to change rates — every Ekubo swap automatically updates the redemption price.
+            <p className="text-xl text-gray-400 font-light">
+              The DAO sets the rules. The agent executes within them.
+              <a 
+                href="https://grinta-loop-shanghai.onrender.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 ml-3 text-[#00FF41] hover:text-[#00e63b] underline-offset-4 hover:underline transition-all font-bold"
+              >
+                Try Governance
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17l9.2-9.2M17 17V7H7" />
+                </svg>
+              </a>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
-            {/* Card 1 */}
-            <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Collateral</div>
-              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>BTC Synthetics</div>
-              <div className="text-sm text-gray-400 mb-4">Grinta accepts synthetic and yield-bearing BTC tokens as collateral — unlocking Bitcoin's deepest liquidity across the ecosystem.</div>
-              <div className="flex flex-wrap justify-center gap-2 mt-3">
-                {['WBTC', 'tBTC', 'cbBTC', 'LBTC', 'SolvBTC', 'eBTC'].map((token) => (
-                  <span key={token} className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-[#00FF41]/10 text-[#00FF41] border border-[#00FF41]/20">
-                    {token}
-                  </span>
-                ))}
-              </div>
-            </div>
-            {/* Card 2 */}
-            <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Stablecoin</div>
-              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>GRIT</div>
-              <div className="text-sm text-gray-400">A thoughtful currency, not rigidly pegged to $1, designed to absorb volatility through incentives.</div>
-            </div>
-            {/* Card 3 */}
-            <div className="border border-white/10 rounded-2xl p-8 text-center hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <div className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">Stability</div>
-              <div className="text-3xl font-bold text-[#00FF41] mb-2" style={{ fontFamily: 'Space Grotesk' }}>PID Controller</div>
-              <div className="text-sm text-gray-400">Real-time algorithmic rate adjustment. Pure mathematics replaces human governance.</div>
-            </div>
+          <div className="w-full max-w-5xl overflow-hidden flex justify-center">
+            <MagicBento
+              textAutoHide={true}
+              enableStars
+              enableSpotlight
+              enableBorderGlow={true}
+              enableTilt={false}
+              enableMagnetism={false}
+              clickEffect
+              spotlightRadius={400}
+              particleCount={12}
+              glowColor="0, 255, 65"
+              disableAnimations={false}
+            />
           </div>
         </section>
 
@@ -728,108 +785,45 @@ export default function Landing() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl">
             {/* Card 1 */}
-            <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
-              <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">SKILL.md</div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Knowledge</h3>
-              <p className="text-sm text-gray-400 leading-relaxed mb-5">
-                A structured knowledge file that any LLM can read to understand the protocol: contract addresses, function signatures, parameter formats, and safe interaction patterns.
-              </p>
-              <CopyButton text={`${window.location.origin}/SKILL.md`} label="Copy SKILL.md link" />
-            </div>
+            <BorderGlow
+              glowColor="135 100 50"
+              backgroundColor="rgba(0, 0, 0, 0.5)"
+              borderRadius={16}
+              glowIntensity={0.8}
+              colors={['#00FF41', '#00e63b', '#00cc35']}
+            >
+              <div className="p-8 text-left h-full">
+                <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">SKILL.md</div>
+                <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Knowledge</h3>
+                <p className="text-sm text-gray-400 leading-relaxed mb-5">
+                  A structured knowledge file that any LLM can read to understand the protocol: contract addresses, function signatures, parameter formats, and safe interaction patterns.
+                </p>
+                <CopyButton text={`${window.location.origin}/SKILL.md`} label="Copy SKILL.md link" />
+              </div>
+            </BorderGlow>
+
             {/* Card 2 */}
-            <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm text-left">
-              <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">MCP Server</div>
-              <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Execution</h3>
-              <p className="text-sm text-gray-400 leading-relaxed mb-5">
-                16 tools for reading protocol state and executing transactions. Agents connect via Model Context Protocol to open SAFEs, manage positions, and monitor system health — no custom code needed.
-              </p>
-              <CopyButton text={`"grinta-cdp": { "type": "stdio", "command": "npx", "args": ["-y", "@grinta/mcp-server"] }`} label="Copy MCP config" />
-            </div>
+            <BorderGlow
+              glowColor="135 100 50"
+              backgroundColor="rgba(0, 0, 0, 0.5)"
+              borderRadius={16}
+              glowIntensity={0.8}
+              colors={['#00FF41', '#00e63b', '#00cc35']}
+            >
+              <div className="p-8 text-left h-full">
+                <div className="inline-block px-3 py-1 bg-[#00FF41]/10 text-[#00FF41] text-xs font-bold rounded mb-6 border border-[#00FF41]/20">MCP Server</div>
+                <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'Space Grotesk' }}>Agent Execution</h3>
+                <p className="text-sm text-gray-400 leading-relaxed mb-5">
+                  16 tools for reading protocol state and executing transactions. Agents connect via Model Context Protocol to open SAFEs, manage positions, and monitor system health — no custom code needed.
+                </p>
+                <CopyButton text={`"grinta-cdp": { "type": "stdio", "command": "npx", "args": ["-y", "@grinta/mcp-server"] }`} label="Copy MCP config" />
+              </div>
+            </BorderGlow>
           </div>
+
           <div className="flex flex-col md:flex-row items-start justify-between gap-12 relative w-full max-w-5xl">
             {/* Connecting lines for desktop */}
             <div className="hidden md:block absolute top-8 left-[15%] right-[15%] h-[1px] bg-white/10 -z-10"></div>
-          </div>
-        </section>
-
-        {/* --- DEPLOYED CONTRACTS & AGENT PROFILES --- */}
-        <section className="section-dark pt-0" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5vw 5vw 10vw 5vw', backgroundColor: '#050505' }}>
-          <div className="text-center mb-16 max-w-4xl">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Syncopate' }}>Deployed Contracts and Discovery</h2>
-            <p className="text-lg text-gray-400 leading-relaxed">
-              Our base infrastructure is already operational on the Starknet network (Testnet) with 7 fundamental smart contracts.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full max-w-6xl">
-            {/* Deployed Contracts */}
-            <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Contracts in tesnet</h3>
-              <div className="flex flex-col gap-4">
-                {[
-                  { name: 'Grit Token', address: '0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2' },
-                  { name: 'SafeManager', address: '0x044728823ae43429eb96c14646077a461101a5db09ce6329a16684dcf199e552' },
-                  { name: 'SafeEngine', address: '0x078802abe86444d116c73821c7b6aff8175bd558bf335b28247b825d49490ef2' },
-                  { name: 'CollateralJoin', address: '0x042a4228c74a2d8933549fb06208b1055ea628d63fa43081d76e41a9d43a8c22' },
-                  { name: 'wBTC', address: '0x055adbd6123ce69b2498fc99aec5006d00ac8b57070c99133f2c67c262e69223' },
-                  { name: 'PID Controller', address: '0x06928a6c33a6284d5f4c68278960ba888045856dc0ff30548972a866a838427d' },
-                  { name: 'Grinta Hook', address: '0x062347cbbb4e4da5c5eea0df072c471ffa530da08b9c04080875d2087f39f38d' },
-                  { name: 'OracleRelayer', address: '0x04acb771661162edeb881001a38282faff841e9118230b08f6df8e3a0920516f' },
-                  { name: 'USDC', address: '0x0728f54606297716e46af72251733521e2c2a374abbc3dce4bcee8df4744dd30' }
-                ].map((contract, i) => (
-                  <div key={i} className="flex justify-between items-center bg-[#0a1a10] p-4 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300">
-                    <span className="text-white font-medium" style={{ fontFamily: 'Space Grotesk' }}>{contract.name}</span>
-                    <a href={`https://sepolia.starkscan.co/contract/${contract.address}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#00FF41] hover:text-white transition-colors truncate w-32 md:w-48 text-right font-mono">
-                      {contract.address.slice(0, 6)}...{contract.address.slice(-4)} ↗
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Agent Profiles */}
-            <div className="border border-white/10 rounded-2xl p-8 hover:border-white/30 transition-colors bg-black/50 backdrop-blur-sm">
-              <h3 className="text-2xl font-bold text-[#00FF41] mb-6" style={{ fontFamily: 'Syncopate' }}>Agent Profiles</h3>
-              <div className="flex flex-col gap-6 h-full">
-                {[
-                  { name: 'motx', link: 'https://social.moltx.io/grinta' },
-                  { name: '4claw', link: 'https://social.moltx.io/grinta' },
-                  { name: 'moltbook', link: 'https://social.moltx.io/grinta' }
-                ].map((agent, i) => (
-                  <div key={i} className="group relative overflow-hidden bg-[#0a1a10] p-6 rounded-xl border border-[#00FF41]/10 hover:border-[#00FF41]/40 transition duration-300 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-black border border-[#00FF41]/30 shadow-[0_0_10px_rgba(74,222,128,0.2)] flex items-center justify-center text-[#00FF41] font-bold text-lg" style={{ fontFamily: 'Syncopate' }}>
-                        {agent.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-xl font-bold text-white group-hover:text-[#00FF41] transition-colors" style={{ fontFamily: 'Space Grotesk', textTransform: 'capitalize' }}>{agent.name}</span>
-                    </div>
-                    <a href={agent.link} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-[#00FF41] text-[#00FF41] rounded hover:bg-[#00FF41] hover:text-black transition-all font-bold text-sm" style={{ fontFamily: 'Space Grotesk', textTransform: 'uppercase' }}>
-                      Profile ↗
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* --- BACKED BY --- */}
-        <section id="about" className="section-dark" style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10vw 5vw', backgroundColor: '#050505', borderTop: '1px solid #111' }}>
-          <div className="text-center mb-12 max-w-4xl">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Syncopate' }}>Backed by</h2>
-            <p className="text-lg text-gray-400 leading-relaxed">
-              Grinta Protocol is researched and developed by Reflecter Labs, a lab focused on the intersection of DeFi, Artificial Intelligence, and advanced cryptography.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center w-full max-w-5xl border border-white/10 rounded-3xl py-16 px-8 md:py-24 md:px-16 bg-black/50 backdrop-blur-sm hover:border-white/30 transition-colors">
-            <div className="flex justify-center md:justify-end items-center border-b md:border-b-0 md:border-r border-white/10 pb-10 md:pb-0 md:pr-16">
-              <img src={LogoReflecterLabs} alt="Reflecter Labs Logo" className="max-h-32 md:max-h-48 object-contain opacity-90 hover:opacity-100 transition-opacity" />
-            </div>
-            <div className="flex justify-center md:justify-start items-center pt-10 md:pt-0 md:pl-16">
-              <a href="https://www.reflecterlabs.xyz" target="_blank" rel="noopener noreferrer" className="cta-btn magnetic px-10 py-4 md:py-5 text-center text-sm md:text-base">
-                <span>Visit Reflecter Labs ↗</span>
-              </a>
-            </div>
           </div>
         </section>
 
@@ -848,13 +842,15 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Campaign Activator - Restricted Admin Tool */}
+            {/* Backed by */}
             <div className="bg-black/5 border border-black/10 rounded-[32px] p-8 flex flex-col items-center justify-center text-center backdrop-blur-sm group hover:border-black/20 transition-all">
-              <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-600 rounded-full border border-red-500/20">
-                <div className={`w-2 h-2 rounded-full ${campaign.state.isActive ? 'bg-red-500 animate-pulse' : 'bg-red-300'}`}></div>
-                <span className="text-[9px] font-black uppercase tracking-widest leading-none">Campaign Grinta</span>
+              <h4 className="text-lg font-bold mb-3 uppercase tracking-widest" style={{ fontFamily: 'Syncopate' }}>Backed by</h4>
+              <p className="text-xs text-gray-600 leading-relaxed max-w-sm">
+                Grinta Protocol is researched and developed by Reflecter Labs, a lab focused on the intersection of DeFi, Artificial Intelligence, and advanced cryptography.
+              </p>
+              <div className="mt-4">
+                <img src={LogoReflecterLabs} alt="Reflecter Labs" className="max-h-16 object-contain opacity-60 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h4 className="text-lg font-bold mb-3 font-syncopate uppercase tracking-widest">Protocol Launch</h4>
             </div>
           </div>
         </footer>
